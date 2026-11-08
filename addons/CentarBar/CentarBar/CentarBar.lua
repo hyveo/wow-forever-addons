@@ -23,6 +23,18 @@ local default = {
 
 local UpdateBindings
 
+-- [Forever/Midnight 대응] 전투 중 쿨다운·충전 값은 '비밀 값(secret value)'으로 내려온다.
+-- 비밀 값은 비교(>, ==)나 산술을 하면 Lua 오류가 나므로, 값을 직접 다루지 않고
+-- 블리자드 Cooldown 위젯(C++)에 그대로 넘겨 스와이프와 숫자를 그리게 한다.
+local function IsSecret(v)
+	return issecretvalue and issecretvalue(v) or false
+end
+-- 비밀 값이면 nil, 아니면 원래 값 (조건문에 안전하게 쓰기 위함)
+local function Plain(v)
+	if IsSecret(v) then return nil end
+	return v
+end
+
 -- 2. CBO 글로벌 프레임 및 addon.db 상단 즉시 바인딩
 _G[ADDON_NAME] = CreateFrame("Frame", ADDON_NAME.."Frame", UIParent)
 addon = _G[ADDON_NAME]
@@ -61,7 +73,7 @@ for k, v in pairs(default) do
 	if addon.db[k] == nil then addon.db[k] = v end
 end
 
--- 3. 12개 버튼 선행 생성 (자체 쿨다운 텍스트 cdText 탑재)
+-- 3. 12개 버튼 선행 생성
 for i = 1, 12 do
 	local btn = CreateFrame("CheckButton", ADDON_NAME.."Button"..i, addon, "SecureActionButtonTemplate")
 	addon[i] = btn
@@ -107,26 +119,20 @@ for i = 1, 12 do
 	cd:EnableMouse(false)
 	if cd.SetDrawEdge then cd:SetDrawEdge(true) end
 	if cd.SetDrawSwipe then cd:SetDrawSwipe(true) end
-	if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(true) end -- 블리자드 내장 숨김 (우리가 최상위 오버레이에 직접 그림)
-	btn.cooldown = cd
-	
-	-- [핵심 혁신] 쿨다운 회전 음영(Level 12)보다 훨씬 높은 최상위 오버레이 프레임 (Level 25)
-	-- 회전 음영이나 다른 텍스처에 절대 가려지지 않고 100% 항상 최상단에 또렷하게 노출
-	local cdOverlay = CreateFrame("Frame", btn:GetName().."CDOverlay", btn)
-	cdOverlay:SetAllPoints()
-	cdOverlay:SetFrameLevel(btn:GetFrameLevel() + 15) -- Level 25!
-	cdOverlay:EnableMouse(false)
-	btn.cdOverlay = cdOverlay
-	
-	local cdText = cdOverlay:CreateFontString(btn:GetName().."CDText", "OVERLAY", "GameFontHighlightLarge")
-	cdText:SetPoint("CENTER", cdOverlay, "CENTER", 0, 0)
+	-- [Forever 수정] 숫자를 Lua에서 계산하지 않고 블리자드 내장 카운트다운 숫자를 사용
+	-- (전투 중 비밀 값이어도 C++ 위젯은 정상적으로 숫자를 그림)
+	if cd.SetHideCountdownNumbers then cd:SetHideCountdownNumbers(false) end
+	if cd.SetCountdownAbbrevThreshold then pcall(cd.SetCountdownAbbrevThreshold, cd, 90) end
+	-- 기존 디자인(20pt 외곽선, 골드색) 유지
 	local fFile = (NumberFontNormalHuge and NumberFontNormalHuge.GetFont and NumberFontNormalHuge:GetFont()) or STANDARD_TEXT_FONT
-	cdText:SetFont(fFile, 20, "OUTLINE")
-	cdText:SetTextColor(1, 0.85, 0, 1) -- 선명하고 또렷한 골드빛 노란색
-	cdOverlay:Hide()
-	btn.cdText = cdText
-	btn.cdStart = 0
-	btn.cdDuration = 0
+	local cdFS = cd.GetCountdownFontString and cd:GetCountdownFontString()
+	if cdFS then
+		cdFS:SetFont(fFile, 20, "OUTLINE")
+		cdFS:SetTextColor(1, 0.85, 0, 1)
+		cdFS:ClearAllPoints()
+		cdFS:SetPoint("CENTER", cd, "CENTER", 0, 0)
+	end
+	btn.cooldown = cd
 	
 	-- 핫키 폰트 (우측 상단)
 	local hotkey = btn:CreateFontString(btn:GetName().."HotKey", "ARTWORK", "NumberFontNormalSmallGray")
@@ -230,181 +236,78 @@ local function SyncButtonAction(btn, slot)
 	btn:SetID(slot)
 end
 
--- 7. [스킬 지속시간 캐시 및 성기사/전직업 기본 쿨다운 프리셋]
--- 와우 C++ 엔진의 전투 중 secret value 차단을 100% 우회하여 전투 중에도 즉시 카운트다운 보장
-local spellDurationCache = {
-	["자유의 축복"] = 25,
-	["정의의 망치"] = 6,
-	["심판"] = 8,
-	["성스러운 방패"] = 8,
-	["응징의 방패"] = 30,
-	["보호의 축복"] = 180,
-	["천상의 보호막"] = 300,
-	["신의 가호"] = 300,
-	["신성한 충격"] = 6,
-	["퇴마술"] = 15,
-	["참회"] = 60,
-	["신성화"] = 8,
-	["참회의 일격"] = 6,
-	["지혜의 축복"] = 0,
-	["힘의 축복"] = 0,
-	["빛의 봉화"] = 0,
-}
-
-local function GetSkillDuration(slot)
-	if not slot or not HasAction(slot) then return 0 end
-	
-	local aType, aId = GetActionInfo(slot)
-	local targetKey = nil
-	
-	if aType == "spell" and aId then
-		local sName = (GetSpellInfo and GetSpellInfo(aId)) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(aId))
-		targetKey = sName or aId
-	elseif aType == "macro" and aId then
-		local sName, _, sId = GetMacroSpell(aId)
-		local actName = GetActionText and GetActionText(slot)
-		targetKey = sName or sId or actName or aId
-	end
-	
-	if targetKey and spellDurationCache[targetKey] and spellDurationCache[targetKey] > 1.5 then
-		return spellDurationCache[targetKey]
-	end
-	
-	-- GetSpellBaseCooldown (밀리초 반환 -> 초 변환)
-	if targetKey and GetSpellBaseCooldown then
-		local ok, baseCD = pcall(GetSpellBaseCooldown, targetKey)
-		if ok and baseCD and baseCD > 1500 then
-			local sec = baseCD / 1000
-			spellDurationCache[targetKey] = sec
-			return sec
+-- 7~9. [Forever 수정] 쿨다운 갱신
+-- 기존 방식(직접 남은 시간 계산 + 자체 타이머)은 전투 중 비밀 값 때문에 비교 단계에서 멈춰 숫자가 사라졌음.
+-- 이제는 DurationObject(또는 원시 값)를 Cooldown 위젯에 그대로 넘기고, 표시는 위젯이 담당한다.
+local function SetCooldownFromSlot(cd, slot)
+	-- 1순위: 12.0+ DurationObject 경로 (전투 중에도 동작)
+	if C_ActionBar and C_ActionBar.GetActionCooldownDuration and cd.SetCooldownFromDurationObject then
+		local okInfo, info = pcall(C_ActionBar.GetActionCooldown, slot)
+		-- isActive / isOnGCD 는 NeverSecret 필드라 조건문에 써도 안전
+		if okInfo and type(info) == "table" and info.isActive == false then
+			if cd.Clear then cd:Clear() else cd:Hide() end
+			return true
 		end
-	end
-	
-	-- 비전투 중 실제 API 반환값으로 캐싱
-	if not InCombatLockdown() then
-		local start, duration = GetActionCooldown(slot)
-		if duration and duration > 1.5 then
-			if targetKey then spellDurationCache[targetKey] = duration end
-			return duration
+		-- 글로벌 쿨다운(1.5초)에는 숫자를 숨기고 스와이프만 표시
+		if cd.SetHideCountdownNumbers then
+			cd:SetHideCountdownNumbers(okInfo and type(info) == "table" and info.isOnGCD == true)
 		end
-		if GetActionCharges then
-			local charges, maxCharges, cStart, cDur = GetActionCharges(slot)
-			if cDur and cDur > 1.5 then
-				if targetKey then spellDurationCache[targetKey] = cDur end
-				return cDur
+		local ok, dObj = pcall(C_ActionBar.GetActionCooldownDuration, slot)
+		if ok and dObj then
+			if pcall(cd.SetCooldownFromDurationObject, cd, dObj) then
+				cd:Show()
+				return true
 			end
 		end
 	end
-	
-	return (targetKey and spellDurationCache[targetKey]) or 0
-end
-
--- 8. [스킬 시전 즉시 타이머 발동기]
-local function TriggerButtonCooldown(btn, directDuration)
-	if not btn then return end
-	local slot = btn.actionSlot or btn.action or btn:GetID()
-	if not slot or not HasAction(slot) then return end
-	
-	local dur = directDuration or GetSkillDuration(slot)
-	if dur and dur > 1.5 then
-		btn.cdDuration = dur
-		btn.endTime = GetTime() + dur
-		if btn.cdText then btn.cdText:SetText(math.ceil(dur)) end
-		if btn.cdOverlay then btn.cdOverlay:Show() end
+	-- 2순위: 구 API (값이 비밀이어도 위젯에 넘기는 것은 허용됨, 비교만 하지 않음)
+	if GetActionCooldown then
+		local start, duration, enable, modRate = GetActionCooldown(slot)
+		if cd.SetCooldown and pcall(cd.SetCooldown, cd, start, duration, modRate or 1) then
+			return true
+		elseif CooldownFrame_Set then
+			pcall(CooldownFrame_Set, cd, start, duration, enable, false, modRate)
+			return true
+		end
 	end
+	return false
 end
 
--- 9. [쿨다운 갱신 - C++ 스와이프 회전 및 하이브리드 타이머]
 local function UpdateButtonCooldown(btn)
 	if not btn then return end
 	local cd = btn.cooldown
 	local slot = btn.actionSlot or btn.action or btn:GetID()
-	
+
 	if not cd or not slot or not HasAction(slot) then
-		if cd then cd:Hide() end
+		if cd then if cd.Clear then cd:Clear() end cd:Hide() end
 		if btn.chargeCooldown then btn.chargeCooldown:Hide() end
-		if btn.cdOverlay then btn.cdOverlay:Hide() end
-		btn.endTime = 0
-		btn.cdDuration = 0
 		return
 	end
-	
-	-- 1) 일반 쿨다운 C++ 스와이프
-	local start, duration, enable, modRate = GetActionCooldown(slot)
-	if cd.SetCooldown then
-		pcall(cd.SetCooldown, cd, start, duration, modRate or 1)
-	elseif CooldownFrame_Set then
-		pcall(CooldownFrame_Set, cd, start, duration, enable, false, modRate)
-	end
-	
-	-- 충전(Charges) 스킬 C++ 스와이프
-	if GetActionCharges then
-		pcall(function()
-			local charges, maxCharges, chargeStart, chargeDuration, chargeModRate = GetActionCharges(slot)
-			if chargeStart and chargeDuration then
-				if not btn.chargeCooldown then
-					btn.chargeCooldown = CreateFrame("Cooldown", btn:GetName().."ChargeCooldown", btn, "CooldownFrameTemplate")
-					btn.chargeCooldown:SetAllPoints()
-					btn.chargeCooldown:SetFrameLevel(btn:GetFrameLevel() + 2)
-					btn.chargeCooldown:EnableMouse(false)
-					if btn.chargeCooldown.SetDrawEdge then btn.chargeCooldown:SetDrawEdge(false) end
-					if btn.chargeCooldown.SetDrawSwipe then btn.chargeCooldown:SetDrawSwipe(false) end
-					if btn.chargeCooldown.SetHideCountdownNumbers then btn.chargeCooldown:SetHideCountdownNumbers(true) end
-				end
-				if btn.chargeCooldown.SetCooldown then
-					pcall(btn.chargeCooldown.SetCooldown, btn.chargeCooldown, chargeStart, chargeDuration, chargeModRate or 1)
-				elseif CooldownFrame_Set then
-					pcall(CooldownFrame_Set, btn.chargeCooldown, chargeStart, chargeDuration, 1, true, chargeModRate)
-				end
-			elseif btn.chargeCooldown then
-				btn.chargeCooldown:Hide()
+
+	SetCooldownFromSlot(cd, slot)
+
+	-- 충전(Charges) 스킬: 충전 재생 스와이프 (숫자 없이 테두리만)
+	local chargeOK = false
+	if C_ActionBar and C_ActionBar.GetActionChargeDuration then
+		local ok, dObj = pcall(C_ActionBar.GetActionChargeDuration, slot)
+		if ok and dObj then
+			if not btn.chargeCooldown then
+				btn.chargeCooldown = CreateFrame("Cooldown", btn:GetName().."ChargeCooldown", btn, "CooldownFrameTemplate")
+				btn.chargeCooldown:SetAllPoints()
+				btn.chargeCooldown:SetFrameLevel(btn:GetFrameLevel() + 2)
+				btn.chargeCooldown:EnableMouse(false)
+				if btn.chargeCooldown.SetDrawEdge then btn.chargeCooldown:SetDrawEdge(true) end
+				if btn.chargeCooldown.SetDrawSwipe then btn.chargeCooldown:SetDrawSwipe(false) end
+				if btn.chargeCooldown.SetHideCountdownNumbers then btn.chargeCooldown:SetHideCountdownNumbers(true) end
 			end
-		end)
-	end
-	
-	-- 2) 하이브리드 타이머: 실제 쿨다운이 감지되면 endTime 즉시 동기화
-	local activeStart, activeDuration = 0, 0
-	pcall(function()
-		if duration and duration > 1.5 and start and start > 0 then
-			activeStart = start
-			activeDuration = duration
-		end
-	end)
-	if activeDuration <= 1.5 and GetActionCharges then
-		pcall(function()
-			local charges, maxCharges, cStart, cDur = GetActionCharges(slot)
-			if cDur and cDur > 1.5 and cStart and cStart > 0 then
-				activeStart = cStart
-				activeDuration = cDur
-			end
-		end)
-	end
-	
-	if activeDuration > 1.5 and activeStart > 0 then
-		local now = GetTime()
-		local remain = (activeStart + activeDuration) - now
-		if remain > 0 then
-			btn.endTime = activeStart + activeDuration
-			btn.cdDuration = activeDuration
-			btn.cdText:SetText(math.ceil(remain))
-			btn.cdOverlay:Show()
-			return
+			chargeOK = pcall(btn.chargeCooldown.SetCooldownFromDurationObject, btn.chargeCooldown, dObj)
 		end
 	end
-	
-	-- 이미 작동 중인 endTime이 남아 있다면 계속 표시 유지
-	if btn.endTime and btn.endTime > GetTime() then
-		local remain = btn.endTime - GetTime()
-		btn.cdText:SetText(math.ceil(remain))
-		btn.cdOverlay:Show()
-	else
-		btn.endTime = 0
-		btn.cdDuration = 0
-		if btn.cdOverlay then btn.cdOverlay:Hide() end
-	end
+	if not chargeOK and btn.chargeCooldown then btn.chargeCooldown:Hide() end
 end
 
--- 9. 스택 및 충전 횟수 표시
+-- 9. 스택 및 충전 횟수 표시 (비밀 값은 비교하지 않고 그대로 SetText)
+local maxChargeCache = {}
 local function UpdateButtonCount(btn)
 	local slot = btn.actionSlot or btn.action or btn:GetID()
 	local count = btn.Count
@@ -413,35 +316,37 @@ local function UpdateButtonCount(btn)
 		count:Hide()
 		return
 	end
-	
-	local resultText = ""
-	local hasCharge = false
+
+	-- 충전형 스킬
 	if GetActionCharges then
-		pcall(function()
-			local charges, maxCharges = GetActionCharges(slot)
-			if type(maxCharges) == "number" and maxCharges > 1 and type(charges) == "number" then
-				resultText = tostring(charges)
-				hasCharge = true
-			end
-		end)
-	end
-	
-	if not hasCharge then
-		local isConsumable = (IsConsumableAction and IsConsumableAction(slot)) or (IsStackableAction and IsStackableAction(slot))
-		if isConsumable then
-			local c = GetActionCount(slot) or 0
-			if type(c) == "number" and c > 1 then
-				resultText = (c > 999 and "*" or tostring(c))
+		local ok, charges, maxCharges = pcall(GetActionCharges, slot)
+		if ok then
+			local m = Plain(maxCharges)
+			if type(m) == "number" then maxChargeCache[slot] = m end
+			m = m or maxChargeCache[slot]
+			if type(m) == "number" and m > 1 and charges ~= nil then
+				count:SetText(charges) -- 비밀 값도 표시는 가능
+				count:Show()
+				return
 			end
 		end
 	end
-	
-	if resultText ~= "" then
-		count:SetText(resultText)
-		count:Show()
-	else
-		count:Hide()
+
+	-- 소모품/중첩 아이템
+	local isConsumable = Plain(IsConsumableAction and IsConsumableAction(slot)) or Plain(IsStackableAction and IsStackableAction(slot))
+	if isConsumable then
+		local c = GetActionCount(slot)
+		if IsSecret(c) then
+			count:SetText(c)
+			count:Show()
+			return
+		elseif type(c) == "number" and c > 1 then
+			count:SetText(c > 999 and "*" or tostring(c))
+			count:Show()
+			return
+		end
 	end
+	count:Hide()
 end
 
 -- 10. 체크 상태 동기화
@@ -449,7 +354,7 @@ local function UpdateCheckedState(btn)
 	local slot = btn.actionSlot or btn.action or btn:GetID()
 	local checked = false
 	if slot and HasAction(slot) then
-		checked = (IsCurrentAction and IsCurrentAction(slot)) or (IsAutoRepeatAction and IsAutoRepeatAction(slot)) or false
+		checked = Plain(IsCurrentAction and IsCurrentAction(slot)) or Plain(IsAutoRepeatAction and IsAutoRepeatAction(slot)) or false
 	end
 	if btn.SetChecked then
 		btn:SetChecked(checked and true or false)
@@ -471,8 +376,6 @@ local function UpdateButtonVisual(btn)
 		if btn.Count then btn.Count:Hide() end
 		if btn.Name then btn.Name:Hide() end
 		if btn.Flash then btn.Flash:Hide() end
-		if btn.cdText then btn.cdText:Hide() end
-		btn.cdRemaining = 0
 		
 		local nt = btn:GetNormalTexture()
 		if db and db.showgrid then
@@ -493,6 +396,9 @@ local function UpdateButtonVisual(btn)
 		return
 	end
 	
+	-- 쿨다운을 가장 먼저 갱신 (아래 코드에서 문제가 생겨도 재사용 대기시간은 표시되도록)
+	if btn.UpdateCooldown then btn:UpdateCooldown() end
+
 	local aType, aId = GetActionInfo(slot)
 	local icon = GetActionTexture(slot)
 	if not icon and aType == "macro" and aId then
@@ -522,7 +428,7 @@ local function UpdateButtonVisual(btn)
 	local nt = btn:GetNormalTexture()
 	if nt then
 		nt:Show()
-		if IsEquippedAction(slot) then
+		if Plain(IsEquippedAction(slot)) then
 			nt:SetVertexColor(0, 1, 0, 1)
 			nt:SetAlpha(1)
 		else
@@ -532,9 +438,9 @@ local function UpdateButtonVisual(btn)
 	end
 	
 	if btn.Flash then
-		if IsAttackAction(slot) and IsCurrentAction(slot) then
+		if Plain(IsAttackAction(slot)) and Plain(IsCurrentAction(slot)) then
 			btn.Flash:Show()
-		elseif IsAutoRepeatAction(slot) then
+		elseif Plain(IsAutoRepeatAction(slot)) then
 			btn.Flash:Show()
 		else
 			btn.Flash:Hide()
@@ -543,6 +449,7 @@ local function UpdateButtonVisual(btn)
 	
 	btn:SetAlpha(db and db.alpha or 1)
 	local isUsable, notEnoughMana = IsUsableAction(slot)
+	isUsable, notEnoughMana = Plain(isUsable), Plain(notEnoughMana)
 	if isUsable then
 		if btn.icon then btn.icon:SetVertexColor(1, 1, 1) end
 	elseif notEnoughMana then
@@ -552,7 +459,6 @@ local function UpdateButtonVisual(btn)
 	end
 	
 	if btn.UpdateCount then btn:UpdateCount() end
-	if btn.UpdateCooldown then btn:UpdateCooldown() end
 	if btn.UpdateChecked then btn:UpdateChecked() end
 end
 
@@ -597,7 +503,6 @@ local function SetupButtonDrag(btn)
 
 	btn:SetScript("PostClick", function(self, button, down)
 		UpdateCheckedState(self)
-		TriggerButtonCooldown(self)
 		if self.UpdateCooldown then self:UpdateCooldown() end
 		if C_Timer and C_Timer.After then
 			C_Timer.After(0.05, function()
@@ -701,28 +606,6 @@ function addon:Setup()
 	if UpdateBindings then UpdateBindings() end
 end
 
--- 14. 실시간 최상위 카운트다운 타이머 렌더러 (전투 중 100% 선명 표출 보장)
-local timerElapsed = 0
-addon:SetScript("OnUpdate", function(self, elapsed)
-	timerElapsed = timerElapsed + elapsed
-	if timerElapsed < 0.05 then return end
-	timerElapsed = 0
-	
-	local now = GetTime()
-	for i = 1, 12 do
-		local btn = self[i]
-		if btn and btn.endTime and btn.endTime > now then
-			local remain = btn.endTime - now
-			btn.cdText:SetText(math.ceil(remain))
-			if not btn.cdOverlay:IsShown() then btn.cdOverlay:Show() end
-		elseif btn and btn.endTime and btn.endTime > 0 then
-			btn.endTime = 0
-			btn.cdDuration = 0
-			btn.cdOverlay:Hide()
-		end
-	end
-end)
-
 -- 15. 풀 라이프사이클 이벤트 리스너 등록
 addon:SetScript("OnEvent", function(self, event, ...)
 	local arg1, arg2, arg3 = ...
@@ -748,56 +631,6 @@ addon:SetScript("OnEvent", function(self, event, ...)
 				UpdateButtonCooldown(btn)
 				UpdateButtonCount(btn)
 				UpdateButtonVisual(btn)
-			end
-		end
-	elseif event == "UNIT_SPELLCAST_SUCCEEDED" then
-		local unit, p2, p3, p4, p5 = ...
-		if unit == "player" then
-			local spellID = (type(p3) == "number" and p3) or (type(p5) == "number" and p5) or (type(p2) == "number" and p2)
-			local castName = (type(p2) == "string" and p2) or (spellID and C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(spellID)) or (spellID and GetSpellInfo and GetSpellInfo(spellID))
-			local castTexture = (spellID and C_Spell and C_Spell.GetSpellTexture and C_Spell.GetSpellTexture(spellID)) or (spellID and GetSpellTexture and GetSpellTexture(spellID))
-			local directDur = (castName and spellDurationCache[castName]) or (spellID and spellDurationCache[spellID])
-			
-			for i = 1, 12 do
-				local btn = self[i]
-				if btn then
-					local slot = btn.actionSlot or btn.action or btn:GetID()
-					if slot and HasAction(slot) then
-						local aType, aId = GetActionInfo(slot)
-						local isMatch = false
-						
-						-- 1) 일반 스펠 슬롯 매칭
-						if aType == "spell" then
-							local sName = (GetSpellInfo and GetSpellInfo(aId)) or (C_Spell and C_Spell.GetSpellName and C_Spell.GetSpellName(aId))
-							if (spellID and aId == spellID) or (castName and sName and sName == castName) then
-								isMatch = true
-							end
-						-- 2) 매크로 슬롯 매칭 (매크로 본문 및 이름 검사)
-						elseif aType == "macro" then
-							local mName, mIcon, mBody = GetMacroInfo(aId)
-							local msName, _, msId = GetMacroSpell(aId)
-							if (spellID and msId == spellID) or (castName and msName and msName == castName) then
-								isMatch = true
-							elseif castName and mBody and mBody:find(castName) then
-								isMatch = true
-							elseif castName and mName and mName:find(castName) then
-								isMatch = true
-							end
-						end
-						
-						-- 3) 텍스처/아이콘 일치 매칭 (폴백)
-						if not isMatch and castTexture then
-							local actTex = GetActionTexture(slot)
-							if actTex and actTex == castTexture then
-								isMatch = true
-							end
-						end
-						
-						if isMatch then
-							TriggerButtonCooldown(btn, directDur)
-						end
-					end
-				end
 			end
 		end
 	elseif event == "PLAYER_REGEN_DISABLED" then
@@ -845,7 +678,6 @@ addon:RegisterEvent("SPELL_UPDATE_CHARGES")
 addon:RegisterEvent("BAG_UPDATE_COOLDOWN")
 addon:RegisterEvent("ACTIONBAR_PAGE_CHANGED")
 addon:RegisterEvent("UPDATE_SHAPESHIFT_FORM")
-addon:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED")
 addon:RegisterEvent("PLAYER_REGEN_DISABLED")
 addon:RegisterEvent("PLAYER_REGEN_ENABLED")
 
