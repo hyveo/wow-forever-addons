@@ -1,0 +1,14 @@
+<Bindings>
+  <Binding name="CENTARBARBUTTON1" header="CENTARBAR" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON2" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON3" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON4" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON5" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON6" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON7" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON8" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON9" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON10" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON11" category="ADDONS"/>
+  <Binding name="CENTARBARBUTTON12" category="ADDONS"/>
+</Bindings>
