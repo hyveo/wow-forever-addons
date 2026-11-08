@@ -1,0 +1,10 @@
+## Interface: 16002, 16001
+## Title: 중앙버튼 설정 (CentarBar_Option)
+## Notes: 옵션
+## Dependencies: CentarBar
+## Author: Clamp, zico
+## X-ModifiedBy: zico
+## Version: @project-version@
+## X-Category: Action Bars
+
+CentarBar_Option.lua

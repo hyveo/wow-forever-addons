@@ -1,10 +1,10 @@
-## Interface: 16001, 11509, 120100, 110200, 120001, 120005, 50504, 30403
+## Interface: 16002, 16001, 11509, 120100, 110200, 120001, 120005, 50504, 30403
 ## Title: 중앙버튼 (CentarBar)
 ## Notes: 가운데 12개의 액션버튼을 만들어줍니다.
 ## SavedVariablesPerCharacter: CentarBarSaveData
 ## Author: Clamp, zico
 ## X-ModifiedBy: zico
-## Version: 1.2
+## Version: @project-version@
 ## X-Category: Action Bars
 
 CentarBar.lua

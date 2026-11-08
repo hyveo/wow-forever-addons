@@ -1,0 +1,11 @@
+## Interface: 16002, 16001
+## Title: 중앙버튼 (CentarBar)
+## Notes: 가운데 12개의 액션버튼을 만들어줍니다.
+## SavedVariablesPerCharacter: CentarBarSaveData
+## Author: Clamp, zico
+## X-ModifiedBy: zico
+## Version: @project-version@
+## X-Category: Action Bars
+
+CentarBar.lua
+CentarBar_Option.lua

@@ -1,0 +1,57 @@
+# 태그 규칙: <애드온폴더명>-v<버전>   예) CentarBar-v1.62
+# 태그를 push하면 그 애드온만 zip으로 묶어 GitHub Release에 올린다.
+name: Release addon
+
+on:
+  push:
+    tags:
+      - "*-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 태그에서 애드온 이름과 버전 추출
+        id: meta
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          echo "addon=${TAG%-v*}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG##*-v}" >> "$GITHUB_OUTPUT"
+
+      - name: zip 만들기
+        id: pkg
+        run: echo "zip=$(scripts/package.sh '${{ steps.meta.outputs.addon }}' '${{ steps.meta.outputs.version }}')" >> "$GITHUB_OUTPUT"
+
+      - name: 릴리스 노트 만들기 (CHANGELOG 해당 버전 + 예시 화면)
+        run: |
+          A="${{ steps.meta.outputs.addon }}"; V="${{ steps.meta.outputs.version }}"
+          CL="addons/$A/CHANGELOG.md"
+          # "## <버전>" 부터 다음 "## " 직전까지 추출
+          awk -v v="$V" '$0 ~ "^## "v"([^0-9.]|$)" {f=1; next} f && /^## / {exit} f' "$CL" \
+            | grep -v '^!\[' > notes.md || true
+          IMG="addons/$A/docs/v$V-before-after.png"
+          if [ -f "$IMG" ]; then
+            printf '\n### 게임 화면 예시 (수정 전 → 후)\n\n![%s %s](https://github.com/%s/blob/%s/%s?raw=true)\n' \
+              "$A" "$V" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$IMG" >> notes.md
+          fi
+          printf '\n---\n설치: zip을 풀어 나온 폴더를 `Interface\\AddOns\\`에 넣고 게임 재시작\n' >> notes.md
+          cat notes.md
+
+      - name: Release 생성 또는 파일 갱신
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "${{ steps.pkg.outputs.zip }}" --clobber
+            gh release edit "$TAG" --notes-file notes.md
+          else
+            gh release create "$TAG" "${{ steps.pkg.outputs.zip }}" \
+              --title "${{ steps.meta.outputs.addon }} ${{ steps.meta.outputs.version }}" \
+              --notes-file notes.md
+          fi
