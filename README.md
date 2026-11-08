@@ -9,6 +9,20 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 |---|---|---|
 | [중앙버튼 (CentarBar)](addons/CentarBar) | 화면 가운데에 액션 버튼 12개를 배치 | [Releases](../../releases) |
 
+## 애드온 요청 받습니다
+
+와우 포에버를 하면서 "이런 애드온 있었으면 좋겠다" 싶은 게 있으면 알려 주세요.
+포에버 클라이언트에서 안 돌아가는 기존 애드온을 고쳐 달라는 요청도 좋습니다.
+
+요청은 [Projects](https://github.com/hyveo/wow-forever-addons/projects) 보드에 남겨 주세요.
+보드에 직접 쓸 수 없으면 [Issues](../../issues/new?template=addon-request.md)에 올려 주시면 보드로 옮겨 관리합니다.
+
+남겨 주실 내용:
+
+- **원하는 기능**: 어떤 상황에서 무엇을 해 주면 좋은지
+- **참고 애드온**: 비슷한 기존 애드온이 있다면 이름과 링크
+- **안 될 때 화면**: 기존 애드온 수정 요청이면 오류 메시지나 스크린샷
+
 ## 설치
 
 1. [Releases](../../releases)에서 원하는 애드온의 zip을 받습니다.
