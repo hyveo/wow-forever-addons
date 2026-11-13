@@ -221,13 +221,16 @@ local function SyncButtonAction(btn, slot)
 		btn:SetAttribute("spell1", spellName)
 		btn:SetAttribute("spell*", spellName)
 	elseif aType == "item" and aId then
-		local itemName = (GetItemInfo and GetItemInfo(aId)) or aId
+		-- [1.64 수정] 아이템 ID 숫자만 넘기면 보안 버튼이 '장비 칸 번호'로 해석해 사용이 안 됨.
+		-- (포에버에는 전역 GetItemInfo가 없어 이름 대신 ID 숫자가 들어가던 문제)
+		-- "item:<ID>" 형식은 이름 조회·캐시와 상관없이 항상 아이템 ID로 인식된다.
+		local itemSpec = "item:" .. aId
 		btn:SetAttribute("type", "item")
 		btn:SetAttribute("type1", "item")
 		btn:SetAttribute("type*", "item")
-		btn:SetAttribute("item", itemName)
-		btn:SetAttribute("item1", itemName)
-		btn:SetAttribute("item*", itemName)
+		btn:SetAttribute("item", itemSpec)
+		btn:SetAttribute("item1", itemSpec)
+		btn:SetAttribute("item*", itemSpec)
 	elseif aType == "macro" and aId then
 		local actName = GetActionText and GetActionText(slot)
 		local name, icon, body = GetMacroInfo(aId)
