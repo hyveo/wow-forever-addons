@@ -49,3 +49,13 @@
 - 오류가 나면: `/console scriptErrors 1` 입력 후 다시 재현하고 오류 문구를 이슈로 남겨주세요.
 
 변경 내역은 [CHANGELOG.md](CHANGELOG.md)를 참고하세요.
+
+## 라이선스
+
+이 폴더의 원본 코드는 Clamp, zico가 만든 것으로, 라이선스 없이 공개되었습니다.
+hyveo가 와우 포에버용으로 수정한 부분만 [MIT 라이선스](../../LICENSE)입니다.
+원본 코드의 모든 권리는 원작자에게 있으며, 원작자가 요청하면 내립니다.
+
+The original code in this folder is by Clamp and zico, released with no license.
+Only hyveo's WoW Forever changes are under the [MIT License](../../LICENSE).
+The original authors keep all rights to their code, and it will be taken down if they ask.

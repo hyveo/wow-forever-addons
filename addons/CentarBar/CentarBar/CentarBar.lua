@@ -1,4 +1,4 @@
--- [제작자: Clamp, zico] CentarBar - 최신 와우 엔진 및 CBO 완전 호환 리뉴얼
+-- [제작자: Clamp, zico] Forever 수정: hyveo -- https://github.com/hyveo/wow-forever-addons
 local ADDON_NAME, addon = ...
 
 -- 1. 기본 설정값 정의
