@@ -321,6 +321,8 @@ local template = {
 	},
 }
 
+local RefreshCount -- 아래 「표시 개수」 영역에서 정의 (템플릿을 고르면 센터 거리가 바뀌어 다시 계산)
+
 local function Template_OnClick(self)
 	for i = 1, 4 do
 		local rbtn = _G["CentarBar_OptionTemplateButton"..i]
@@ -331,6 +333,7 @@ local function Template_OnClick(self)
 			memory(buttons[i], template[self.index].x[i], template[self.index].y[i])
 		end
 	end
+	if RefreshCount then RefreshCount() end
 end
 
 for i = 1, #template do
@@ -351,22 +354,27 @@ titleCount:SetPoint("TOPLEFT", 235, -92)
 
 local COUNT_CHOICES = { 6, 12, 18 }
 
-local function IsEnabled(i, count)
+-- 본체와 같은 규칙(센터에서 가까운 열부터 좌우 한 열씩)을 미리보기 격자의 현재 위치로 계산
+local function IsEnabled(i, count, xs)
 	local a = _G["CentarBar"]
-	if a and a.IsButtonEnabled then return a.IsButtonEnabled(i, count) end
+	if a and a.IsButtonEnabled then return a.IsButtonEnabled(i, count, xs) end
 	return true
 end
 
 -- 고른 개수에 맞춰 라디오 체크와 미리보기 격자의 버튼 표시를 갱신
-local function RefreshCount()
+function RefreshCount()
 	local count = options.count or 18
 	for i = 1, #COUNT_CHOICES do
 		local rbtn = _G["CentarBar_OptionCountButton"..i]
 		if rbtn then rbtn:SetChecked(COUNT_CHOICES[i] == count) end
 	end
+	local xs = {}
+	for i = 1, NUM_BUTTONS do
+		if buttons[i] then xs[i] = buttons[i].x end
+	end
 	for i = 1, NUM_BUTTONS do
 		if buttons[i] then
-			if IsEnabled(i, count) then buttons[i]:Show() else buttons[i]:Hide() end
+			if IsEnabled(i, count, xs) then buttons[i]:Show() else buttons[i]:Hide() end
 		end
 	end
 end

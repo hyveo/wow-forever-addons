@@ -31,12 +31,39 @@ local NUM_BUTTONS = 18
 local MAIN_BUTTONS = 12
 local BUTTON_SIZE = 36
 
--- 표시할 버튼 개수(6/12/18): 18은 전부, 12는 1~12번, 6은 좌우 안쪽 줄(1~3번 + 7~9번)
-local INNER_SIX = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true }
-local function IsButtonEnabled(i, count)
-	if count == 6 then return INNER_SIX[i] == true end
-	if count == 12 then return i <= MAIN_BUTTONS end
-	return true
+-- 표시할 버튼 개수(6/12/18): 센터에서 가까운 열부터 좌우 한 열(3개)씩 늘린다.
+-- 열은 3개 묶음이고, 가까운지는 번호가 아니라 현재 저장된 x 위치(센터=0)로 정한다.
+local COLUMNS = {
+	left  = { {1, 2, 3}, {4, 5, 6}, {13, 14, 15} },
+	right = { {7, 8, 9}, {10, 11, 12}, {16, 17, 18} },
+}
+local function ColumnDistance(col, xs)
+	local sum = 0
+	for _, i in ipairs(col) do sum = sum + math.abs((xs and xs[i]) or default.x[i]) end
+	return sum / #col
+end
+local function GetEnabledSet(count, xs)
+	local shown = (count == 6 and 1) or (count == 12 and 2) or 3
+	local set = {}
+	for _, side in pairs(COLUMNS) do
+		local order = {}
+		for idx, col in ipairs(side) do
+			order[idx] = { col = col, d = ColumnDistance(col, xs), idx = idx }
+		end
+		-- 센터와 가까운 열이 먼저, 거리가 같으면 번호가 앞선 열이 먼저
+		table.sort(order, function(a, b)
+			if a.d ~= b.d then return a.d < b.d end
+			return a.idx < b.idx
+		end)
+		for k = 1, shown do
+			for _, i in ipairs(order[k].col) do set[i] = true end
+		end
+	end
+	return set
+end
+local function IsButtonEnabled(i, count, xs)
+	if count ~= 6 and count ~= 12 then return true end
+	return GetEnabledSet(count, xs)[i] == true
 end
 local LAYOUT_VERSION = 2 -- 저장값 보정(13~18번 위치·추가 페이지)을 이미 끝낸 표시
 
@@ -669,7 +696,7 @@ UpdateBindings = function()
 		local keys = { GetBindingKey("CENTARBARBUTTON"..i) }
 		for _, key in ipairs(keys) do
 			-- 숨겨진 버튼(표시 개수 밖)에는 단축키를 연결하지 않는다
-			if key and key ~= "" and IsButtonEnabled(i, addon.db and addon.db.count) then
+			if key and key ~= "" and IsButtonEnabled(i, addon.db and addon.db.count, addon.db and addon.db.x) then
 				SetOverrideBindingClick(addon, false, key, btnName, "LeftButton")
 			end
 		end
@@ -728,7 +755,7 @@ function addon:Setup()
 			btn:SetPoint("CENTER", self, "CENTER", bx, by)
 			btn:SetAlpha(alpha)
 			btn:SetScale(1)
-			if IsButtonEnabled(i, self.db.count) then btn:Show() else btn:Hide() end
+			if IsButtonEnabled(i, self.db.count, self.db.x) then btn:Show() else btn:Hide() end
 			
 			SetupButtonDrag(btn)
 			UpdateButtonVisual(btn)
