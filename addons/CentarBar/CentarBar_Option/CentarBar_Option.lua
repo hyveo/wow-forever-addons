@@ -344,10 +344,49 @@ for i = 1, #template do
 	l:SetScript("OnClick", Template_OnClick)
 end
 
+-- 표시 개수 선택 (6 / 12 / 18): 외형 템플릿 바로 아래
+local titleCount = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+titleCount:SetText("표시 개수")
+titleCount:SetPoint("TOPLEFT", 235, -92)
+
+local COUNT_CHOICES = { 6, 12, 18 }
+
+local function IsEnabled(i, count)
+	local a = _G["CentarBar"]
+	if a and a.IsButtonEnabled then return a.IsButtonEnabled(i, count) end
+	return true
+end
+
+-- 고른 개수에 맞춰 라디오 체크와 미리보기 격자의 버튼 표시를 갱신
+local function RefreshCount()
+	local count = options.count or 18
+	for i = 1, #COUNT_CHOICES do
+		local rbtn = _G["CentarBar_OptionCountButton"..i]
+		if rbtn then rbtn:SetChecked(COUNT_CHOICES[i] == count) end
+	end
+	for i = 1, NUM_BUTTONS do
+		if buttons[i] then
+			if IsEnabled(i, count) then buttons[i]:Show() else buttons[i]:Hide() end
+		end
+	end
+end
+
+for i = 1, #COUNT_CHOICES do
+	local r = _G["CentarBar_OptionCountButton"..i] or CreateFrame("CheckButton", "CentarBar_OptionCountButton"..i, options, "UIRadioButtonTemplate")
+	r:SetPoint("TOPLEFT", 235 + (i - 1) * 70, -108)
+	local txt = _G[r:GetName().."Text"]
+	if txt then txt:SetText(COUNT_CHOICES[i].."개") end
+	r.count = COUNT_CHOICES[i]
+	r:SetScript("OnClick", function(self)
+		options.count = self.count
+		RefreshCount()
+	end)
+end
+
 -- 우측 세부 설정 체크박스들
 local titleOpt = options:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 titleOpt:SetText("세부 옵션")
-titleOpt:SetPoint("TOPLEFT", 235, -95)
+titleOpt:SetPoint("TOPLEFT", 235, -140)
 
 local function CreateOptionCheck(name, label, yPos, onClick)
 	local cb = _G[options:GetName()..name] or CreateFrame("CheckButton", options:GetName()..name, options, "UICheckButtonTemplate")
@@ -360,22 +399,22 @@ local function CreateOptionCheck(name, label, yPos, onClick)
 	return cb
 end
 
-local decal = CreateOptionCheck("Decal", "대칭 이동", 118, function(self) self:GetParent().decal = self:GetChecked() end)
-local combat = CreateOptionCheck("Combat", "전투 시 투명도 복구", 142, function(self) self:GetParent().combat = self:GetChecked() end)
-local target = CreateOptionCheck("Target", "대상 선택 시 복구", 166, function(self) self:GetParent().target = self:GetChecked() end)
-local mover = CreateOptionCheck("Over", "마우스오버 시 복구", 190, function(self) self:GetParent().mouseover = self:GetChecked() end)
-local tooltip = CreateOptionCheck("Tooltip", "툴팁 숨김", 214, function(self) self:GetParent().hideTooltip = self:GetChecked() end)
+local decal = CreateOptionCheck("Decal", "대칭 이동", 163, function(self) self:GetParent().decal = self:GetChecked() end)
+local combat = CreateOptionCheck("Combat", "전투 시 투명도 복구", 187, function(self) self:GetParent().combat = self:GetChecked() end)
+local target = CreateOptionCheck("Target", "대상 선택 시 복구", 211, function(self) self:GetParent().target = self:GetChecked() end)
+local mover = CreateOptionCheck("Over", "마우스오버 시 복구", 235, function(self) self:GetParent().mouseover = self:GetChecked() end)
+local tooltip = CreateOptionCheck("Tooltip", "툴팁 숨김", 259, function(self) self:GetParent().hideTooltip = self:GetChecked() end)
 
 local mounted
-local vehicle = CreateOptionCheck("Vehicle", "탈것 탑승 시 숨김", 238, function(self)
+local vehicle = CreateOptionCheck("Vehicle", "탈것 탑승 시 숨김", 283, function(self)
 	self:GetParent().vehiclehide = self:GetChecked()
 	if mounted then
 		if self:GetChecked() then mounted:Enable() else mounted:Disable() end
 	end
 end)
 
-mounted = CreateOptionCheck("Mounted", "  - 일반 탈것 포함", 262, function(self) self:GetParent().mounthide = self:GetChecked() end)
-local grid = CreateOptionCheck("Grid", "빈 버튼 항상 표시", 286, function(self) self:GetParent().showgrid = self:GetChecked() end)
+mounted = CreateOptionCheck("Mounted", "  - 일반 탈것 포함", 307, function(self) self:GetParent().mounthide = self:GetChecked() end)
+local grid = CreateOptionCheck("Grid", "빈 버튼 항상 표시", 331, function(self) self:GetParent().showgrid = self:GetChecked() end)
 
 -- 하단 중앙: 적용 및 닫기 버튼
 local accept = CreateFrame("Button", nil, options, "UIPanelButtonTemplate")
@@ -400,6 +439,7 @@ accept:SetScript("OnClick", function(self)
 		addon.db.page = parent.page
 		addon.db.page2 = parent.page2
 		addon.db.pageExtra = parent.pageExtra
+		addon.db.count = parent.count or addon.db.count
 		addon.db.step = parent.step
 		addon.db.showgrid = parent.showgrid
 		addon.db.scale = parent.scale
@@ -455,6 +495,7 @@ local function OpenOrToggleCBO()
 	options.page = db.page or 2
 	options.page2 = db.page2 or 2
 	options.pageExtra = db.pageExtra or 10
+	options.count = db.count or 18
 	options.alpha = db.alpha or 1
 	options.combat = db.combat
 	options.target = db.target
@@ -490,7 +531,8 @@ local function OpenOrToggleCBO()
 			memory(buttons[i], db.x[i], db.y[i])
 		end
 	end
-	
+	RefreshCount()
+
 	if not options.vehiclehide then
 		if mounted and mounted.Disable then mounted:Disable() end
 	end

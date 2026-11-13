@@ -23,12 +23,21 @@ local default = {
 	-- 13~18번 버튼이 쓰는 액션바 페이지 (그 페이지의 1~6번 칸)
 	-- 3~6페이지는 기본 화면의 오른쪽/왼쪽/아래쪽 액션바와 같은 칸이라 아이템이 서로 연동되므로 10페이지를 쓴다
 	pageExtra = 10,
+	count = 18, -- 표시할 버튼 개수 (6, 12, 18)
 }
 
 -- 버튼 개수: 1~12는 특성별 페이지, 13~18은 추가 페이지의 1~6번 칸
 local NUM_BUTTONS = 18
 local MAIN_BUTTONS = 12
 local BUTTON_SIZE = 36
+
+-- 표시할 버튼 개수(6/12/18): 18은 전부, 12는 1~12번, 6은 좌우 안쪽 줄(1~3번 + 7~9번)
+local INNER_SIX = { [1] = true, [2] = true, [3] = true, [7] = true, [8] = true, [9] = true }
+local function IsButtonEnabled(i, count)
+	if count == 6 then return INNER_SIX[i] == true end
+	if count == 12 then return i <= MAIN_BUTTONS end
+	return true
+end
 local LAYOUT_VERSION = 2 -- 저장값 보정(13~18번 위치·추가 페이지)을 이미 끝낸 표시
 
 -- 저장값이 없을 때 쓸 기본값 복사본 (default 표 자체를 저장값으로 쓰면 비교 기준이 같이 바뀐다)
@@ -153,6 +162,7 @@ addon:Show()
 
 _G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or CopyDefaults()
 addon.db = _G[ADDON_NAME.."SaveData"]
+addon.IsButtonEnabled = IsButtonEnabled -- 설정창이 미리보기 격자에 같은 규칙을 쓰도록 노출
 
 -- [슬래시 명령어 즉각 선행 등록]
 SLASH_CENTARBAR1 = "/cbo"
@@ -658,7 +668,8 @@ UpdateBindings = function()
 		local btnName = ADDON_NAME.."Button"..i
 		local keys = { GetBindingKey("CENTARBARBUTTON"..i) }
 		for _, key in ipairs(keys) do
-			if key and key ~= "" then
+			-- 숨겨진 버튼(표시 개수 밖)에는 단축키를 연결하지 않는다
+			if key and key ~= "" and IsButtonEnabled(i, addon.db and addon.db.count) then
 				SetOverrideBindingClick(addon, false, key, btnName, "LeftButton")
 			end
 		end
@@ -717,7 +728,7 @@ function addon:Setup()
 			btn:SetPoint("CENTER", self, "CENTER", bx, by)
 			btn:SetAlpha(alpha)
 			btn:SetScale(1)
-			btn:Show()
+			if IsButtonEnabled(i, self.db.count) then btn:Show() else btn:Hide() end
 			
 			SetupButtonDrag(btn)
 			UpdateButtonVisual(btn)
