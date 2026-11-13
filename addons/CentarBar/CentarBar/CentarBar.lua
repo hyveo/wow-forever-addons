@@ -3,8 +3,9 @@ local ADDON_NAME, addon = ...
 
 -- 1. 기본 설정값 정의
 local default = {
-	x = {-14, -14, -14, -19, -19, -19, 14, 14, 14, 19, 19, 19},
-	y = {-5, 0, 5, -7, -2, 3, -5, 0, 5, 3, -2, -7},
+	-- 1~12: 기존 배치 / 13~15: 왼쪽 바깥 줄 / 16~18: 오른쪽 바깥 줄
+	x = {-14, -14, -14, -19, -19, -19, 14, 14, 14, 19, 19, 19, -24, -24, -24, 24, 24, 24},
+	y = {-5, 0, 5, -7, -2, 3, -5, 0, 5, 3, -2, -7, -5, 0, 5, -5, 0, 5},
 	yOffset = 0,
 	alpha = 1,
 	scale = 1,
@@ -19,7 +20,31 @@ local default = {
 	page2 = 2,
 	page3 = 2,
 	page4 = 2,
+	pageExtra = 3, -- 13~18번 버튼이 쓰는 액션바 페이지 (그 페이지의 1~6번 칸)
 }
+
+-- 버튼 개수: 1~12는 특성별 페이지, 13~18은 추가 페이지의 1~6번 칸
+local NUM_BUTTONS = 18
+local MAIN_BUTTONS = 12
+
+-- 기존 저장값(12개)에 13~18번 기본 위치를 채워 넣는다 (기존 위치는 건드리지 않음)
+local function EnsureDefaults(db)
+	for k, v in pairs(default) do
+		if db[k] == nil then db[k] = v end
+	end
+	if type(db.x) ~= "table" then db.x = {} end
+	if type(db.y) ~= "table" then db.y = {} end
+	for i = 1, NUM_BUTTONS do
+		if db.x[i] == nil then db.x[i] = default.x[i] end
+		if db.y[i] == nil then db.y[i] = default.y[i] end
+	end
+end
+
+-- 단축키 설정 화면에 보일 이름
+BINDING_HEADER_CENTARBAR = "중앙버튼"
+for i = 1, NUM_BUTTONS do
+	_G["BINDING_NAME_CENTARBARBUTTON"..i] = "중앙버튼 "..i
+end
 
 local UpdateBindings
 
@@ -69,12 +94,10 @@ SlashCmdList["CENTARBAR"] = function(msg)
 		end
 	end
 end
-for k, v in pairs(default) do
-	if addon.db[k] == nil then addon.db[k] = v end
-end
+EnsureDefaults(addon.db)
 
--- 3. 12개 버튼 선행 생성
-for i = 1, 12 do
+-- 3. 버튼 선행 생성 (NUM_BUTTONS개)
+for i = 1, NUM_BUTTONS do
 	local btn = CreateFrame("CheckButton", ADDON_NAME.."Button"..i, addon, "SecureActionButtonTemplate")
 	addon[i] = btn
 	btn:SetID(i)
@@ -514,7 +537,7 @@ local function SetupButtonDrag(btn)
 	btn:SetScript("OnEnter", function(self)
 		local db = addon.db or _G[ADDON_NAME.."SaveData"] or default
 		if db and db.mouseover then
-			for j = 1, 12 do
+			for j = 1, NUM_BUTTONS do
 				if addon[j] then addon[j]:SetAlpha(db.alpha or 1) end
 			end
 		end
@@ -531,11 +554,31 @@ local function SetupButtonDrag(btn)
 		GameTooltip:Hide()
 		local db = addon.db or _G[ADDON_NAME.."SaveData"] or default
 		if db and db.mouseover and not InCombatLockdown() then
-			for j = 1, 12 do
+			for j = 1, NUM_BUTTONS do
 				if addon[j] then addon[j]:SetAlpha(0) end
 			end
 		end
 	end)
+end
+
+-- 12-1. 단축키 연결: 단축키 설정 화면에서 지정한 키를 해당 버튼 클릭으로 연결
+-- (Bindings.xml의 바인딩은 이름만 있어서, 실제 동작은 여기서 덮어쓰기 바인딩으로 연결)
+UpdateBindings = function()
+	if InCombatLockdown() then
+		addon.pendingBindings = true
+		return
+	end
+	addon.pendingBindings = nil
+	ClearOverrideBindings(addon)
+	for i = 1, NUM_BUTTONS do
+		local btnName = ADDON_NAME.."Button"..i
+		local keys = { GetBindingKey("CENTARBARBUTTON"..i) }
+		for _, key in ipairs(keys) do
+			if key and key ~= "" then
+				SetOverrideBindingClick(addon, false, key, btnName, "LeftButton")
+			end
+		end
+	end
 end
 
 -- 13. [CBO 핵심 인터페이스] Setup() 함수 구현
@@ -548,9 +591,7 @@ function addon:Setup()
 	
 	_G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or default
 	self.db = _G[ADDON_NAME.."SaveData"]
-	for k, v in pairs(default) do
-		if self.db[k] == nil then self.db[k] = v end
-	end
+	EnsureDefaults(self.db)
 	
 	local step = self.db.step or 10
 	local scale = self.db.scale or 1
@@ -565,8 +606,13 @@ function addon:Setup()
 	
 	local curPage = GetCurrentPage(self.db)
 	
-	for i = 1, 12 do
-		local slot = (curPage - 1) * 12 + i
+	for i = 1, NUM_BUTTONS do
+		local slot
+		if i <= MAIN_BUTTONS then
+			slot = (curPage - 1) * 12 + i
+		else
+			slot = ((self.db.pageExtra or default.pageExtra) - 1) * 12 + (i - MAIN_BUTTONS)
+		end
 		local btn = self[i]
 		if btn then
 			btn.actionSlot = slot
@@ -612,20 +658,28 @@ addon:SetScript("OnEvent", function(self, event, ...)
 	if event == "VARIABLES_LOADED" or event == "PLAYER_LOGIN" or event == "PLAYER_ENTERING_WORLD" then
 		self:Setup()
 	elseif event == "ACTIONBAR_SLOT_CHANGED" then
-		for i = 1, 12 do
+		for i = 1, NUM_BUTTONS do
 			local btn = self[i]
 			if btn and (not arg1 or btn.actionSlot == arg1 or btn:GetID() == arg1) then
 				SyncButtonAction(btn, btn.actionSlot or btn:GetID())
 				UpdateButtonVisual(btn)
 			end
 		end
-	elseif event == "UPDATE_MACROS" or event == "UPDATE_BINDINGS" or event == "ACTIONBAR_UPDATE_STATE" or event == "ACTIONBAR_UPDATE_USABLE" or event == "SPELL_UPDATE_USABLE" then
-		for i = 1, 12 do
+	elseif event == "UPDATE_BINDINGS" then
+		UpdateBindings()
+		for i = 1, NUM_BUTTONS do
+			local btn = self[i]
+			if btn and btn.HotKey then
+				btn.HotKey:SetText(GetBindingKey("CENTARBARBUTTON"..i) or "")
+			end
+		end
+	elseif event == "UPDATE_MACROS" or event == "ACTIONBAR_UPDATE_STATE" or event == "ACTIONBAR_UPDATE_USABLE" or event == "SPELL_UPDATE_USABLE" then
+		for i = 1, NUM_BUTTONS do
 			local btn = self[i]
 			if btn then UpdateButtonVisual(btn) end
 		end
 	elseif event == "ACTIONBAR_UPDATE_COOLDOWN" or event == "SPELL_UPDATE_COOLDOWN" or event == "ACTIONBAR_UPDATE_CHARGES" or event == "SPELL_UPDATE_CHARGES" or event == "BAG_UPDATE_COOLDOWN" or event == "ACTIONBAR_PAGE_CHANGED" or event == "UPDATE_SHAPESHIFT_FORM" then
-		for i = 1, 12 do
+		for i = 1, NUM_BUTTONS do
 			local btn = self[i]
 			if btn then
 				UpdateButtonCooldown(btn)
@@ -635,24 +689,25 @@ addon:SetScript("OnEvent", function(self, event, ...)
 		end
 	elseif event == "PLAYER_REGEN_DISABLED" then
 		self:SetAlpha(1)
-		for j = 1, 12 do
+		for j = 1, NUM_BUTTONS do
 			local btn = self[j]
 			if btn then
 				UpdateButtonVisual(btn)
 			end
 		end
 	elseif event == "PLAYER_REGEN_ENABLED" then
+		if self.pendingBindings then UpdateBindings() end
 		local db = self.db or _G[ADDON_NAME.."SaveData"]
 		if db and db.combat then
-			for j = 1, 12 do
+			for j = 1, NUM_BUTTONS do
 				if self[j] then self[j]:SetAlpha(0) end
 			end
 		else
-			for j = 1, 12 do
+			for j = 1, NUM_BUTTONS do
 				if self[j] then self[j]:SetAlpha(db and db.alpha or 1) end
 			end
 		end
-		for i = 1, 12 do
+		for i = 1, NUM_BUTTONS do
 			local btn = self[i]
 			if btn then
 				SyncButtonAction(btn, btn.actionSlot or btn:GetID())

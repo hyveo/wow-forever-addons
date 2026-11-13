@@ -2,6 +2,15 @@
 local ADDON_NAME = ...
 local addon = _G["CentarBar"]
 
+-- 버튼 개수 (본체와 동일): 1~12 기존, 13~15 왼쪽 바깥 줄, 16~18 오른쪽 바깥 줄
+local NUM_BUTTONS = 18
+
+-- 대칭 이동 짝: 1~6 <-> 7~12, 13~15 <-> 16~18
+local function PartnerOf(id)
+	if id <= 12 then return id + (id > 6 and -6 or 6) end
+	return id + (id > 15 and -3 or 3)
+end
+
 -- [1. 싱글톤 가드: 2중 중복 로드 및 격자선 겹침 원천 차단]
 if _G["CentarBar_Option_Loaded"] then
 	return
@@ -15,7 +24,7 @@ end
 options:SetFrameStrata("DIALOG")
 options:SetFrameLevel(100)
 options:SetWidth(450)
-options:SetHeight(380)
+options:SetHeight(430)
 options:SetPoint("CENTER", UIParent, "CENTER", 0, 50)
 if options.SetBackdrop then
 	options:SetBackdrop({
@@ -140,7 +149,7 @@ local function OnUpdate(self, elapsed)
 	if id and self[id] and (self[id].x ~= x or self[id].y ~= y) then
 		memory(self[id], x, y)
 		if options.decal then
-			local partner = id + (id > 6 and -6 or 6)
+			local partner = PartnerOf(id)
 			if self[partner] then
 				memory(self[partner], -x, y)
 			end
@@ -157,14 +166,18 @@ local function OnDragStop(self)
 	buttons:SetScript("OnUpdate", nil)
 end
 
-for i = 1, 12 do
+for i = 1, NUM_BUTTONS do
 	local btn = buttons[i] or CreateFrame("Button", "CentarBar_OptionDummyBtn"..i, buttons)
 	btn:SetID(i)
 	btn:SetSize(36, 36)
 	if not btn.icon then
 		btn.icon = btn:CreateTexture(nil, "BORDER")
 		btn.icon:SetAllPoints(btn)
-		btn.icon:SetColorTexture(0, 0.4, 1, 0.4)
+		if i > 12 then
+			btn.icon:SetColorTexture(0.1, 0.8, 0.3, 0.45) -- 추가 버튼(13~18)은 초록색
+		else
+			btn.icon:SetColorTexture(0, 0.4, 1, 0.4)
+		end
 	end
 	btn:SetNormalFontObject("GameFontHighlight")
 	btn:SetScript("OnMouseDown", OnDragStart)
@@ -248,7 +261,7 @@ stepSlider:SetScript("OnValueChanged", function(self, value)
 	self.title:SetText(self.formatLabel(value))
 	self:GetParent().step = value
 	UpdateGridPositions(value)
-	for i = 1, 12 do
+	for i = 1, NUM_BUTTONS do
 		if buttons[i] and buttons[i].x and buttons[i].y then
 			memory(buttons[i], buttons[i].x, buttons[i].y)
 		end
@@ -278,23 +291,33 @@ page2Slider:SetScript("OnMouseWheel", function(self, delta)
 	self:SetValue(math.max(1, math.min(10, (self:GetParent().page2 or 2) + delta)))
 end)
 
+-- 6. 추가 버튼(13~18) 페이지
+local pageExSlider = CreateOptionSlider("PageExtra", 1, 10, 1, 305, function(v) return "추가 버튼(13~18) 페이지: " .. string.format("%d", v) end)
+pageExSlider:SetScript("OnValueChanged", function(self, value)
+	self.title:SetText(self.formatLabel(value))
+	self:GetParent().pageExtra = value
+end)
+pageExSlider:SetScript("OnMouseWheel", function(self, delta)
+	self:SetValue(math.max(1, math.min(10, (self:GetParent().pageExtra or 3) + delta)))
+end)
+
 -- 우측 외형 템플릿 라디오 버튼 4개 (2x2 그리드 배치)
 local template = {
 	{ name = "기본형식",
-		x = {-25, -29, -31, -31, -29, -25, 25, 29, 31, 31, 29, 25},
-		y = {15, 9, 3, -3, -9, -15, 15, 9, 3, -3, -9, -15},
+		x = {-25, -29, -31, -31, -29, -25, 25, 29, 31, 31, 29, 25, -36, -38, -36, 36, 38, 36},
+		y = {15, 9, 3, -3, -9, -15, 15, 9, 3, -3, -9, -15, 9, 0, -9, 9, 0, -9},
 	},
 	{ name = "3x3(1)",
-		x = {-20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20},
-		y = {5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5},
+		x = {-20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20, -25, -25, -25, 25, 25, 25},
+		y = {5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5},
 	},
 	{ name = "3x3(2)",
-		x = {-18, -18, -18, -23, -23, -23, 18, 18, 18, 23, 23, 23},
-		y = {-5, 0, 5, 3, -2, -7, -5, 0, 5, 3, -2, -7},
+		x = {-18, -18, -18, -23, -23, -23, 18, 18, 18, 23, 23, 23, -28, -28, -28, 28, 28, 28},
+		y = {-5, 0, 5, 3, -2, -7, -5, 0, 5, 3, -2, -7, -5, 0, 5, -5, 0, 5},
 	},
 	{ name = "3x3(3)",
-		x = {-20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20},
-		y = {5, 0, -5, 3, -2, -7, 3, -2, -7, 5, 0, -5},
+		x = {-20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20, -25, -25, -25, 25, 25, 25},
+		y = {5, 0, -5, 3, -2, -7, 3, -2, -7, 5, 0, -5, 3, -2, -7, 3, -2, -7},
 	},
 }
 
@@ -303,7 +326,7 @@ local function Template_OnClick(self)
 		local rbtn = _G["CentarBar_OptionTemplateButton"..i]
 		if rbtn then rbtn:SetChecked(i == self.index) end
 	end
-	for i = 1, 12 do
+	for i = 1, NUM_BUTTONS do
 		if buttons[i] and template[self.index] then
 			memory(buttons[i], template[self.index].x[i], template[self.index].y[i])
 		end
@@ -364,7 +387,9 @@ accept:SetScript("OnClick", function(self)
 	local parent = self:GetParent()
 	addon = _G["CentarBar"]
 	if addon and addon.db then
-		for i = 1, 12 do
+		addon.db.x = addon.db.x or {}
+		addon.db.y = addon.db.y or {}
+		for i = 1, NUM_BUTTONS do
 			if buttons[i] and buttons[i].x and buttons[i].y then
 				addon.db.x[i] = buttons[i].x
 				addon.db.y[i] = buttons[i].y
@@ -374,6 +399,7 @@ accept:SetScript("OnClick", function(self)
 		addon.db.alpha = parent.alpha
 		addon.db.page = parent.page
 		addon.db.page2 = parent.page2
+		addon.db.pageExtra = parent.pageExtra
 		addon.db.step = parent.step
 		addon.db.showgrid = parent.showgrid
 		addon.db.scale = parent.scale
@@ -428,6 +454,7 @@ local function OpenOrToggleCBO()
 	options.scale = db.scale or 1
 	options.page = db.page or 2
 	options.page2 = db.page2 or 2
+	options.pageExtra = db.pageExtra or 3
 	options.alpha = db.alpha or 1
 	options.combat = db.combat
 	options.target = db.target
@@ -444,6 +471,7 @@ local function OpenOrToggleCBO()
 	stepSlider:SetValue(options.step)
 	page1Slider:SetValue(options.page)
 	page2Slider:SetValue(options.page2)
+	pageExSlider:SetValue(options.pageExtra)
 	
 	decal:SetChecked(options.decal)
 	combat:SetChecked(options.combat)
@@ -457,7 +485,7 @@ local function OpenOrToggleCBO()
 	buttons:ClearAllPoints()
 	buttons:SetPoint("CENTER", 0, (options.yOffset or 0) * (options.step or 10))
 	buttons:SetText("CENTER\n"..(options.yOffset or 0))
-	for i = 1, 12 do
+	for i = 1, NUM_BUTTONS do
 		if buttons[i] and db.x and db.x[i] then
 			memory(buttons[i], db.x[i], db.y[i])
 		end
