@@ -298,7 +298,7 @@ pageExSlider:SetScript("OnValueChanged", function(self, value)
 	self:GetParent().pageExtra = value
 end)
 pageExSlider:SetScript("OnMouseWheel", function(self, delta)
-	self:SetValue(math.max(1, math.min(10, (self:GetParent().pageExtra or 3) + delta)))
+	self:SetValue(math.max(1, math.min(10, (self:GetParent().pageExtra or 10) + delta)))
 end)
 
 -- 우측 외형 템플릿 라디오 버튼 4개 (2x2 그리드 배치)
@@ -454,7 +454,7 @@ local function OpenOrToggleCBO()
 	options.scale = db.scale or 1
 	options.page = db.page or 2
 	options.page2 = db.page2 or 2
-	options.pageExtra = db.pageExtra or 3
+	options.pageExtra = db.pageExtra or 10
 	options.alpha = db.alpha or 1
 	options.combat = db.combat
 	options.target = db.target

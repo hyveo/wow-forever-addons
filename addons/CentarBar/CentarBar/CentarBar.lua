@@ -20,23 +20,104 @@ local default = {
 	page2 = 2,
 	page3 = 2,
 	page4 = 2,
-	pageExtra = 3, -- 13~18번 버튼이 쓰는 액션바 페이지 (그 페이지의 1~6번 칸)
+	-- 13~18번 버튼이 쓰는 액션바 페이지 (그 페이지의 1~6번 칸)
+	-- 3~6페이지는 기본 화면의 오른쪽/왼쪽/아래쪽 액션바와 같은 칸이라 아이템이 서로 연동되므로 10페이지를 쓴다
+	pageExtra = 10,
 }
 
 -- 버튼 개수: 1~12는 특성별 페이지, 13~18은 추가 페이지의 1~6번 칸
 local NUM_BUTTONS = 18
 local MAIN_BUTTONS = 12
+local BUTTON_SIZE = 36
+local LAYOUT_VERSION = 2 -- 저장값 보정(13~18번 위치·추가 페이지)을 이미 끝낸 표시
 
--- 기존 저장값(12개)에 13~18번 기본 위치를 채워 넣는다 (기존 위치는 건드리지 않음)
+-- 저장값이 없을 때 쓸 기본값 복사본 (default 표 자체를 저장값으로 쓰면 비교 기준이 같이 바뀐다)
+local function CopyDefaults()
+	local t = {}
+	for k, v in pairs(default) do
+		if type(v) == "table" then
+			local c = {}
+			for kk, vv in pairs(v) do c[kk] = vv end
+			t[k] = c
+		else
+			t[k] = v
+		end
+	end
+	return t
+end
+
+-- 13~18번 버튼이 다른 버튼과 겹치는지 (칸 단위 좌표 x step = 화면 픽셀)
+local function ExtraOverlaps(db, i, j, step)
+	local limit = BUTTON_SIZE + 2
+	return math.abs(db.x[i] - db.x[j]) * step < limit and math.abs(db.y[i] - db.y[j]) * step < limit
+end
+
+-- 13~18번을 사용자의 기존 배치 '바깥쪽'에 놓는다 (13~15 왼쪽, 16~18 오른쪽)
+local function PlaceExtraButton(db, i, placed)
+	local step = db.step or 10
+	local minX, maxX = db.x[1], db.x[1]
+	for j = 2, MAIN_BUTTONS do
+		if db.x[j] < minX then minX = db.x[j] end
+		if db.x[j] > maxX then maxX = db.x[j] end
+	end
+	local gap = math.max(5, math.ceil((BUTTON_SIZE + 2) / step))
+	local left = i <= 15
+	db.x[i] = left and math.min(default.x[i], minX - gap) or math.max(default.x[i], maxX + gap)
+	db.y[i] = default.y[i]
+	-- 이미 놓인 버튼과 겹치면 겹치지 않을 때까지 바깥으로 한 칸씩 민다
+	for _ = 1, 60 do
+		local clash = false
+		for j = 1, NUM_BUTTONS do
+			if j ~= i and placed[j] and ExtraOverlaps(db, i, j, step) then
+				clash = true
+				break
+			end
+		end
+		if not clash then break end
+		db.x[i] = db.x[i] + (left and -1 or 1)
+	end
+end
+
+-- 기존 저장값(12개)에 13~18번을 채워 넣는다. 1~12번 위치는 건드리지 않는다.
 local function EnsureDefaults(db)
 	for k, v in pairs(default) do
-		if db[k] == nil then db[k] = v end
+		if db[k] == nil then
+			if type(v) == "table" then
+				db[k] = {}
+				for kk, vv in pairs(v) do db[k][kk] = vv end
+			else
+				db[k] = v
+			end
+		end
 	end
 	if type(db.x) ~= "table" then db.x = {} end
 	if type(db.y) ~= "table" then db.y = {} end
-	for i = 1, NUM_BUTTONS do
+	for i = 1, MAIN_BUTTONS do
 		if db.x[i] == nil then db.x[i] = default.x[i] end
 		if db.y[i] == nil then db.y[i] = default.y[i] end
+	end
+
+	if db.layoutVer ~= LAYOUT_VERSION then
+		-- 13~18번이 비었거나, 예전 버전이 채워 둔 고정 좌표 그대로면 내 배치에 맞춰 다시 놓는다
+		-- (직접 옮겨 둔 위치는 기본 좌표와 달라서 그대로 둔다)
+		local placed, need = {}, {}
+		for i = 1, MAIN_BUTTONS do placed[i] = true end
+		for i = MAIN_BUTTONS + 1, NUM_BUTTONS do
+			if db.x[i] == nil or db.y[i] == nil or (db.x[i] == default.x[i] and db.y[i] == default.y[i]) then
+				need[i] = true
+			else
+				placed[i] = true
+			end
+		end
+		for i = MAIN_BUTTONS + 1, NUM_BUTTONS do
+			if need[i] then
+				PlaceExtraButton(db, i, placed)
+				placed[i] = true
+			end
+		end
+		-- 예전 기본값(3페이지)은 오른쪽 액션바와 같은 칸이라 새 기본 페이지로 옮긴다
+		if db.pageExtra == 3 then db.pageExtra = default.pageExtra end
+		db.layoutVer = LAYOUT_VERSION
 	end
 end
 
@@ -70,7 +151,7 @@ addon:SetFrameStrata("MEDIUM")
 addon:EnableMouse(false)
 addon:Show()
 
-_G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or default
+_G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or CopyDefaults()
 addon.db = _G[ADDON_NAME.."SaveData"]
 
 -- [슬래시 명령어 즉각 선행 등록]
@@ -592,7 +673,7 @@ function addon:Setup()
 		pcall(SetCVar, "countdownForCooldowns", "1")
 	end
 	
-	_G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or default
+	_G[ADDON_NAME.."SaveData"] = _G[ADDON_NAME.."SaveData"] or CopyDefaults()
 	self.db = _G[ADDON_NAME.."SaveData"]
 	EnsureDefaults(self.db)
 	
