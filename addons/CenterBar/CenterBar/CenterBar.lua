@@ -18,7 +18,7 @@ if GetLocale() == "koKR" then
 		COMBAT_WAIT = "전투가 끝나면 적용할게요.",
 		LOCKED      = "센터바를 잠갔어요.",
 		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
-		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
+		PRESETS     = { "세로 3줄", "곡선 (기본형식)", "3x3(1)", "3x3(2)", "3x3(3)" },
 		MM_LEFT     = "왼쪽 클릭: 설정 창",
 		MM_RIGHT    = "오른쪽 클릭: 다음 슬롯",
 		MM_DRAG     = "드래그: 버튼 옮기기",
@@ -37,7 +37,7 @@ else
 		COMBAT_WAIT = "Will apply after combat.",
 		LOCKED      = "CenterBar locked.",
 		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
-		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
+		PRESETS     = { "Columns", "Curved", "3x3 (1)", "3x3 (2)", "3x3 (3)" },
 		MM_LEFT     = "Left-click: options",
 		MM_RIGHT    = "Right-click: next slot",
 		MM_DRAG     = "Drag: move this button",
@@ -104,13 +104,13 @@ local COLUMNS = {
 }
 
 local DEFAULTS = {
-	version    = 4,
+	version    = 5,
 	point      = nil,        -- 저장 위치 (nil이면 화면 한가운데)
 	x          = 0,
 	y          = 0,
 	scale      = 1.0,
 	alpha      = 1.0,
-	preset     = 1,          -- PRESETS 번호
+	preset     = 2,          -- PRESETS 번호 (2 = 곡선)
 	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
 	grid       = false,      -- 빈 칸도 테두리 보이기 (끄면 빈 칸은 안 보임)
@@ -160,7 +160,12 @@ local function Migrate()
 		db.grid = false
 		db.version = 4
 	end
-	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 1 end
+	if (db.version or 1) < 5 then
+		-- 기본 배치를 곡선으로: 아직 "세로 3줄" 그대로 쓰고 있으면 곡선으로 바꾼다 (직접 옮긴 배치는 그대로)
+		if db.preset == 1 then db.preset = 2 db.px, db.py = nil, nil end
+		db.version = 5
+	end
+	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 2 end
 end
 
 -- 버튼 자리(db.px, db.py)가 없으면 고른 배치에서 복사한다. 격자에서 직접 옮기면 preset = 0(직접 배치).
