@@ -105,6 +105,7 @@ local DEFAULTS = {
 	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
 	grid       = true,       -- 빈 칸도 테두리 보이기
+	mirror     = true,       -- 격자에서 옮길 때 반대쪽 버튼도 같이
 	visibility = "always",   -- always / combat / mouseover
 	locked     = true,
 	tooltips   = true,
@@ -133,7 +134,15 @@ local function Migrate()
 		db.point, db.relPoint, db.x, db.y = nil, nil, 0, 0
 		db.version = 3
 	end
-	if not PRESETS[db.preset] then db.preset = 1 end
+	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 1 end
+end
+
+-- 버튼 자리(db.px, db.py)가 없으면 고른 배치에서 복사한다. 격자에서 직접 옮기면 preset = 0(직접 배치).
+local function EnsurePositions()
+	if type(db.px) == "table" and type(db.py) == "table" and #db.px >= 18 and #db.py >= 18 then return end
+	local p = PRESETS[db.preset] or PRESETS[1]
+	db.px, db.py = {}, {}
+	for i = 1, 18 do db.px[i], db.py[i] = p.x[i], p.y[i] end
 end
 
 local function CurrentSpec()
@@ -148,8 +157,7 @@ local function CurrentSlot()
 end
 
 local function ButtonOffset(i)
-	local p = PRESETS[db.preset]
-	return p.x[i] * db.step, p.y[i] * db.step
+	return db.px[i] * db.step, db.py[i] * db.step
 end
 
 local function ButtonAction(i, slot)
@@ -163,7 +171,7 @@ end
 -- 표시 개수 6/12/18: 양쪽에서 캐릭터와 가까운 열부터 보인다
 local function EnabledSet()
 	local set, shown = {}, db.count / 6
-	local xs = PRESETS[db.preset].x
+	local xs = db.px
 	for _, side in ipairs(COLUMNS) do
 		local order = {}
 		for idx, col in ipairs(side) do
@@ -465,6 +473,7 @@ local function ApplyAll()
 		return
 	end
 	pending = false
+	EnsurePositions()
 	ApplyPosition()
 	ApplyLayout()
 	ApplyVisibility()
@@ -524,6 +533,7 @@ CenterBar = {
 	Set = function(key, value)
 		if not db then return end
 		db[key] = value
+		if key == "preset" then db.px, db.py = nil, nil end
 		ApplyAll()
 	end,
 	GetSlot = function() return db and CurrentSlot() or 1 end,
@@ -531,6 +541,15 @@ CenterBar = {
 	NextSlot = function() SetSlot(CurrentSlot() % NUM_SLOTS + 1) end,
 	GetSlotInfo = function(s) return SLOTS[s] end,
 	NUM_PRESETS = #PRESETS,
+	NUM_BUTTONS = NUM_BUTTONS,
+	GetPos = function(i) if db and db.px then return db.px[i], db.py[i] end end,
+	SetPos = function(i, x, y)
+		if not db or not db.px or InCombatLockdown() then return end
+		db.px[i], db.py[i] = x, y
+		db.preset = 0
+		ApplyAll()
+	end,
+	IsButtonShown = function(i) return db and db.px and EnabledSet()[i] or false end,
 	Apply = function() ApplyAll() end,
 	Reset = function()
 		if InCombatLockdown() then Print(L.COMBAT_WAIT) return end
