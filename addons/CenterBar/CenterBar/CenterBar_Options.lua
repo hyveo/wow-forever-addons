@@ -285,16 +285,15 @@ close:SetScript("OnClick", function() f:Hide() end)
 local edit = CreateFrame("Frame", "CenterBarEditFrame", UIParent)
 edit:SetSize(10, 10)
 edit:SetFrameStrata("HIGH")
-edit:SetFrameLevel(5)
 edit:Hide()
 
 -- 화면 전체 격자: 화면(UIParent) 가장자리에서 가장자리까지 긋는다. 간격 = 이동간격 x 2.
--- 예전 센터바와 똑같이: 화면(UIParent)에 바로 붙인 판에 선을 긋는다.
-local gridFrame = CreateFrame("Frame", "CenterBarGridFrame", UIParent)
+local gridFrame = CreateFrame("Frame", nil, edit)
 gridFrame:SetAllPoints(UIParent)
 gridFrame:SetFrameStrata("HIGH")
 gridFrame:SetFrameLevel(0)
-gridFrame:Hide()
+gridFrame:SetIgnoreParentScale(true)
+gridFrame:SetScale(UIParent:GetEffectiveScale())
 local LINES = 100
 local vlines, hlines = {}, {}
 for i = -LINES, LINES do
@@ -333,7 +332,8 @@ local function RefreshEdit()
 	edit:ClearAllPoints()
 	edit:SetPoint("CENTER", CenterBarFrame, "CENTER")
 	-- 선 굵기는 화면 픽셀 1칸 이상이 되게 (UI 배율이 작으면 1보다 얇은 선은 안 보인다)
-	local es = UIParent:GetEffectiveScale()
+	gridFrame:SetScale(UIParent:GetEffectiveScale())
+	local es = gridFrame:GetEffectiveScale()
 	local px = (es and es > 0 and es < 1) and (1 / es) or 1
 	for i = -LINES, LINES do
 		local c = i * step * 2
@@ -424,8 +424,6 @@ f:SetScript("OnShow", function()
 	Refresh()
 end)
 f:SetScript("OnHide", function() edit:Hide() end)
-edit:SetScript("OnShow", function() gridFrame:Show() end)
-edit:SetScript("OnHide", function() gridFrame:Hide() end)
 
 CenterBarOptions = {
 	Toggle = function() f:SetShown(not f:IsShown()) end,
