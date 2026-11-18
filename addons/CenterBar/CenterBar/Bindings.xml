@@ -17,4 +17,5 @@
   <Binding name="CLICK CenterBarButton16:LeftButton" category="ADDONS"/>
   <Binding name="CLICK CenterBarButton17:LeftButton" category="ADDONS"/>
   <Binding name="CLICK CenterBarButton18:LeftButton" category="ADDONS"/>
+  <Binding name="CENTERBAR_NEXTSLOT" category="ADDONS">CenterBar.NextSlot()</Binding>
 </Bindings>
