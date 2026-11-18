@@ -333,7 +333,8 @@ local function UpdateButton(b)
 end
 
 local function UpdateFrame(b, cursor)
-	local show = db.grid or b.has or cursor
+	-- 테두리는 빈 칸에만 (기술이 들어 있으면 아이콘만 보임)
+	local show = not b.has and (db.grid or cursor)
 	if b.bg:IsShown() ~= (show and true or false) then
 		b.bg:SetShown(show)
 		for _, t in ipairs(b.edge) do t:SetShown(show) end
