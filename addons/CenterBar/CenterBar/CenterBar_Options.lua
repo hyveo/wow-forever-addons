@@ -13,8 +13,6 @@ if GetLocale() == "koKR" then
 		ALPHA      = "투명도: %d%%",
 		STEP       = "이동간격: %d",
 		SLOT       = "슬롯 (지금 특성)",
-		PAGE_MAIN  = "이 슬롯 페이지 (버튼 1~12): %d",
-		PAGE_EXTRA = "추가 버튼(13~18) 페이지: %d",
 		POS_Y      = "세로 위치",
 		POS_X      = "가로 위치",
 		MIRROR     = "대칭 이동",
@@ -30,7 +28,7 @@ if GetLocale() == "koKR" then
 		CLOSE      = "닫기 (ESC)",
 		CENTER     = "CENTER",
 		TIP1       = "화면 격자에서 번호 칸을 끌면 버튼이, CENTER 칸을 끌면 전체가 위아래로 움직여요.",
-		TIP2       = "슬롯 1 = 예전 센터바와 같은 칸(2페이지 + 10페이지). 단축키: 게임 메뉴 → 단축키 설정 → 애드온",
+		TIP2       = "슬롯마다 넣은 기술이 따로 저장돼요 (다른 액션바와 안 섞임). 단축키: 게임 메뉴 → 단축키 설정 → 애드온",
 	}
 else
 	L2 = {
@@ -44,8 +42,6 @@ else
 		ALPHA      = "Opacity: %d%%",
 		STEP       = "Grid step: %d",
 		SLOT       = "Slot (this spec)",
-		PAGE_MAIN  = "Slot page (buttons 1–12): %d",
-		PAGE_EXTRA = "Extra buttons (13–18) page: %d",
 		POS_Y      = "Vertical",
 		POS_X      = "Horizontal",
 		MIRROR     = "Mirror moves",
@@ -61,7 +57,7 @@ else
 		CLOSE      = "Close (ESC)",
 		CENTER     = "CENTER",
 		TIP1       = "Drag numbered boxes on the grid to move buttons; drag CENTER to move everything up/down.",
-		TIP2       = "Slot 1 = same slots as the old CentarBar (page 2 + page 10). Keybinds: Game Menu → Keybindings → AddOns",
+		TIP2       = "Each slot keeps its own spells (not shared with action bars). Keybinds: Game Menu → Keybindings → AddOns",
 	}
 end
 
@@ -216,17 +212,11 @@ Header(L2.SLOT, LEFT, -196)
 do
 	local items = {}
 	for i = 1, CenterBar.NUM_SLOTS do items[i] = { text = CenterBar.L.SLOT:format(i), value = i } end
-	Buttons(LEFT, -214, 60, 3, items, CenterBar.GetSlot, CenterBar.SetSlot)
+	for i = 1, CenterBar.NUM_SLOTS do items[i].text = tostring(i) end
+	Buttons(LEFT, -214, 34, 5, items, CenterBar.GetSlot, CenterBar.SetSlot)
 end
-Slider(L2.PAGE_MAIN, -264, 1, 15,
-	function() return CenterBar.GetSlotPage("main") end,
-	function(v) CenterBar.SetSlotPage("main", v) end)
-Slider(L2.PAGE_EXTRA, -310, 1, 15,
-	function() return CenterBar.GetSlotPage("extra") end,
-	function(v) CenterBar.SetSlotPage("extra", v) end)
-
-Nudger(L2.POS_Y, -344, 0, 1)
-Nudger(L2.POS_X, -370, 1, 0)
+Nudger(L2.POS_Y, -256, 0, 1)
+Nudger(L2.POS_X, -282, 1, 0)
 
 ---------------------------------------------------------------------------
 -- 오른쪽: 배치, 표시 개수, 세부 옵션

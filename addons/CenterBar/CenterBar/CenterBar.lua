@@ -19,8 +19,9 @@ if GetLocale() == "koKR" then
 		LOCKED      = "센터바를 잠갔어요.",
 		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
 		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
+		CANT_PLACE  = "여기에는 주문, 아이템, 매크로만 넣을 수 있어요.",
 		RESET       = "센터바 위치와 설정을 처음으로 되돌렸어요. (버튼에 넣은 기술은 그대로예요)",
-		HELP        = "/cb — 설정 창  |  /cb 1, /cb 2, /cb 3 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
+		HELP        = "/cb — 설정 창  |  /cb 1 ~ /cb 5 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
 		HANDLE      = "센터바 — 드래그해서 옮기기",
 	}
 else
@@ -34,8 +35,9 @@ else
 		LOCKED      = "CenterBar locked.",
 		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
 		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
+		CANT_PLACE  = "Only spells, items and macros can go here.",
 		RESET       = "CenterBar position and settings reset. (Your spells stay on the buttons)",
-		HELP        = "/cb — options  |  /cb 1, /cb 2, /cb 3 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
+		HELP        = "/cb — options  |  /cb 1 … /cb 5 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
 		HANDLE      = "CenterBar — drag to move",
 	}
 end
@@ -50,19 +52,18 @@ end
 ---------------------------------------------------------------------------
 local NUM_BUTTONS = 18
 local BUTTON_SIZE = 36
-local PAGE_SLOTS  = 12
 
--- 슬롯: 버튼 18개가 쓰는 액션 칸 묶음. 기술은 게임이 칸마다 저장하므로 슬롯을 바꿔도 그대로 남는다.
---   main  = 버튼 1~12가 쓰는 액션바 페이지
---   extra = 버튼 13~18이 쓰는 페이지, offset = 그 페이지에서 몇 번째 칸부터(0 → 1~6번, 6 → 7~12번)
--- 슬롯 1은 예전 센터바(CentarBar)와 같은 칸이라, 예전에 넣어 둔 기술이 그대로 보인다.
--- 페이지 13~15는 기본 UI 액션바 6~8과 같은 칸이다.
-local SLOTS = {
-	{ main = 2,  extra = 10, offset = 0 },
-	{ main = 13, extra = 10, offset = 6 },
-	{ main = 14, extra = 15, offset = 0 },
+-- 슬롯: 버튼 18개에 넣은 기술 묶음. 게임 액션바 칸을 빌리지 않고 센터바가 캐릭터별로 직접 저장하므로
+-- 다른 액션바나 다른 슬롯과 내용이 섞이지 않는다.
+local NUM_SLOTS = 5
+
+-- 예전 버전(액션바 칸을 빌려 쓰던 1.2.x 이하, 예전 CentarBar)에서 넣어 둔 기술을 한 번 가져올 때 읽는 칸.
+-- { 버튼 1~12의 첫 칸, 버튼 13~18의 첫 칸 }
+local IMPORT_FROM = {
+	{ 13, 109 },   -- 슬롯 1: 2페이지 + 10페이지 1~6번 (예전 센터바 기본값)
+	{ 145, 115 },  -- 슬롯 2: 13페이지 + 10페이지 7~12번
+	{ 157, 169 },  -- 슬롯 3: 14페이지 + 15페이지 1~6번
 }
-local NUM_SLOTS = #SLOTS
 
 -- 배치: 화면 가운데(캐릭터)를 0,0으로 본 버튼 18개의 칸 좌표. 실제 거리 = 좌표 x 간격(step, 기본 10).
 -- 예전 센터바와 같은 좌표 체계라 같은 자리에 놓인다.
@@ -111,7 +112,8 @@ local DEFAULTS = {
 	mouseover  = false,      -- 마우스를 올리면 복구
 	vehiclehide = false,     -- 탈것(탑승 장비) 탑승 시 숨김
 	mounthide  = false,      -- 일반 탈것도 포함
-	slotPages  = {},         -- [슬롯] = { main = 페이지, extra = 페이지 } (직접 바꾼 경우만)
+	sets       = {},         -- [슬롯][버튼] = { t = "spell"/"item"/"macro", id = 번호, name = 매크로 이름 }
+	imported   = false,      -- 예전 버전 기술 가져오기를 끝냈는지
 	locked     = true,
 	tooltips   = true,
 	specSlot   = {},         -- [특성 번호] = 슬롯 번호
@@ -165,7 +167,7 @@ end
 
 local function CurrentSlot()
 	local s = db and db.specSlot[CurrentSpec()] or 1
-	if not SLOTS[s] then s = 1 end
+	if type(s) ~= "number" or s < 1 or s > NUM_SLOTS then s = 1 end
 	return s
 end
 
@@ -173,15 +175,15 @@ local function ButtonOffset(i)
 	return db.px[i] * db.step, db.py[i] * db.step
 end
 
-local function ButtonAction(i, slot)
+local function Content(i, slot)
+	local set = db.sets[slot or CurrentSlot()]
+	return set and set[i]
+end
+
+local function SetContent(i, c, slot)
 	slot = slot or CurrentSlot()
-	local s, o = SLOTS[slot], db.slotPages[slot]
-	local main = (o and o.main) or s.main
-	local extra = (o and o.extra) or s.extra
-	if i <= PAGE_SLOTS then
-		return (main - 1) * PAGE_SLOTS + i
-	end
-	return (extra - 1) * PAGE_SLOTS + s.offset + (i - PAGE_SLOTS)
+	db.sets[slot] = db.sets[slot] or {}
+	db.sets[slot][i] = c
 end
 
 -- 표시 개수 6/12/18: 양쪽에서 캐릭터와 가까운 열부터 보인다
@@ -245,36 +247,24 @@ handle:Hide()
 ---------------------------------------------------------------------------
 -- 버튼
 --
--- 게임 기본 액션 버튼 틀(ActionBarButtonTemplate)을 애드온이 만들어 쓰면, 재사용 대기시간 같은
--- "비밀 값"을 다루는 기본 UI 코드가 막혀 오류가 난다. 그래서 누르는 동작만 게임 보안 버튼에 맡기고
--- 아이콘·대기시간·개수·테두리는 직접 그린다.
+-- 누르는 동작만 게임 보안 버튼(SecureActionButton)에 맡기고, 아이콘·대기시간·개수·테두리는 직접 그린다.
+-- 버튼 내용은 액션바 칸이 아니라 "주문 번호 / 아이템 번호 / 매크로"로 센터바가 직접 기억한다.
 ---------------------------------------------------------------------------
 local WHITE = "Interface\\Buttons\\WHITE8X8"
 local isSecret = issecretvalue or function() return false end
 
--- 끌어다 놓기/빼기는 보안 코드에서 처리 (애드온 코드가 직접 하면 "기능이 차단되었습니다"가 뜬다)
+-- 버튼에서 끌어 빼기는 보안 코드에서 처리 (전투 중에는 안 됨)
 local DRAG_START = [[
+	if PlayerInCombat() then return false end
 	local mod = (IsModifiedClick and IsModifiedClick("PICKUPACTION")) or IsShiftKeyDown()
 	if self:GetAttribute("cb-lock") and not mod then return false end
-	return "action", self:GetAttribute("action")
-]]
-local DRAG_RECEIVE = [[
-	return "action", self:GetAttribute("action")
+	local t = self:GetAttribute("type")
+	if t == "spell" then return "spell", self:GetAttribute("spell") end
+	if t == "item" then return "item", self:GetAttribute("item") end
+	if t == "macro" then return "macro", self:GetAttribute("macro") end
+	return false
 ]]
 local function NoOp() end
-
-local function Edge(b, layer, r, g, bl, a, size)
-	local t = {}
-	for k = 1, 4 do
-		t[k] = b:CreateTexture(nil, layer)
-		t[k]:SetColorTexture(r, g, bl, a)
-	end
-	t[1]:SetPoint("TOPLEFT") t[1]:SetPoint("TOPRIGHT") t[1]:SetHeight(size)
-	t[2]:SetPoint("BOTTOMLEFT") t[2]:SetPoint("BOTTOMRIGHT") t[2]:SetHeight(size)
-	t[3]:SetPoint("TOPLEFT") t[3]:SetPoint("BOTTOMLEFT") t[3]:SetWidth(size)
-	t[4]:SetPoint("TOPRIGHT") t[4]:SetPoint("BOTTOMRIGHT") t[4]:SetWidth(size)
-	return t
-end
 
 local function ShortKey(key)
 	if not key then return "" end
@@ -284,73 +274,119 @@ local function ShortKey(key)
 	return text
 end
 
-local function UpdateCooldown(b)
-	local slot, cd = b.slot, b.cd
-	if not slot then return end
-	-- 새 방식: 게임이 주는 "지속시간 객체"를 그대로 넘긴다 (값을 들여다보지 않으므로 전투 중에도 됨)
-	if C_ActionBar and C_ActionBar.GetActionCooldownDuration and cd.SetCooldownFromDurationObject then
-		local okInfo, info = pcall(C_ActionBar.GetActionCooldown, slot)
-		if okInfo and type(info) == "table" and info.isActive == false then
-			cd:Clear()
-			return
-		end
-		local ok, obj = pcall(C_ActionBar.GetActionCooldownDuration, slot)
-		if ok and obj and pcall(cd.SetCooldownFromDurationObject, cd, obj) then return end
+local function MacroIndex(c)
+	if c.name and GetMacroIndexByName then
+		local idx = GetMacroIndexByName(c.name)
+		if idx and idx > 0 then return idx end
+		return nil
 	end
-	if GetActionCooldown then
-		local ok, start, duration, _, modRate = pcall(GetActionCooldown, slot)
-		if ok and start ~= nil then pcall(cd.SetCooldown, cd, start, duration, modRate) end
+	return c.id
+end
+
+-- 매크로가 지금 쓰려는 주문 (아이콘·대기시간 표시용)
+local function MacroSpell(c)
+	local idx = MacroIndex(c)
+	if idx and GetMacroSpell then
+		local ok, id = pcall(GetMacroSpell, idx)
+		if ok and id and not isSecret(id) then return id end
 	end
 end
 
-local function CountText(slot)
-	if C_ActionBar and C_ActionBar.GetActionDisplayCount then
-		return C_ActionBar.GetActionDisplayCount(slot) or ""
+local function ContentTexture(c)
+	if c.t == "spell" then
+		return C_Spell.GetSpellTexture(c.id)
+	elseif c.t == "item" then
+		return C_Item.GetItemIconByID(c.id)
+	elseif c.t == "macro" then
+		local idx = MacroIndex(c)
+		if not idx then return 134400 end -- 매크로가 지워졌으면 물음표
+		local spell = MacroSpell(c)
+		local tex = spell and C_Spell.GetSpellTexture(spell)
+		if tex then return tex end
+		local _, icon = GetMacroInfo(idx)
+		return icon or 134400
 	end
-	if (IsConsumableAction and IsConsumableAction(slot)) or (IsStackableAction and IsStackableAction(slot)) then
-		local n = GetActionCount(slot)
-		return n > 9999 and "*" or tostring(n)
+end
+
+local function UpdateCooldown(b)
+	local c, cd = b.content, b.cd
+	if not c then return end
+	local spell = (c.t == "spell" and c.id) or (c.t == "macro" and MacroSpell(c)) or nil
+	if spell then
+		-- 게임이 주는 "지속시간 객체"를 그대로 넘긴다 (값을 들여다보지 않으므로 전투 중에도 됨)
+		if C_Spell.GetSpellCooldownDuration and cd.SetCooldownFromDurationObject then
+			local ok, obj = pcall(C_Spell.GetSpellCooldownDuration, spell)
+			if ok and obj and pcall(cd.SetCooldownFromDurationObject, cd, obj) then return end
+		end
+		local ok, info = pcall(C_Spell.GetSpellCooldown, spell)
+		if ok and type(info) == "table" then
+			pcall(cd.SetCooldown, cd, info.startTime, info.duration, info.modRate)
+		end
+	elseif c.t == "item" then
+		local get = (C_Container and C_Container.GetItemCooldown) or (C_Item and C_Item.GetItemCooldown)
+		if get then
+			local ok, start, duration = pcall(get, c.id)
+			if ok and start ~= nil then pcall(cd.SetCooldown, cd, start, duration) end
+		end
+	else
+		cd:Clear()
 	end
-	if GetActionCharges then
-		local charges, maxCharges = GetActionCharges(slot)
-		if maxCharges and maxCharges > 1 then return tostring(charges) end
+end
+
+local function UpdateCount(b)
+	local c = b.content
+	local text = ""
+	if c and c.t == "item" then
+		local ok, n = pcall(C_Item.GetItemCount, c.id, false, true)
+		if ok and n and not isSecret(n) then
+			b.itemCount = n
+			if n > 1 then text = (n > 9999) and "*" or tostring(n) end
+		end
+	elseif c and c.t == "spell" and C_Spell.GetSpellDisplayCount then
+		local ok, n = pcall(C_Spell.GetSpellDisplayCount, c.id)
+		if ok and n then text = n end
 	end
-	return ""
+	if not pcall(b.count.SetText, b.count, text) then b.count:SetText("") end
 end
 
 local function UpdateState(b)
-	local slot = b.slot
-	if not slot or not b.has then return end
-	local ok, usable, noMana = pcall(IsUsableAction, slot)
-	if ok and not isSecret(usable) and not isSecret(noMana) then
-		if usable then b.icon:SetVertexColor(1, 1, 1)
-		elseif noMana then b.icon:SetVertexColor(0.5, 0.5, 1)
-		else b.icon:SetVertexColor(0.4, 0.4, 0.4) end
-	end
-	local ok2, cur = pcall(IsCurrentAction, slot)
-	local ok3, auto = pcall(IsAutoRepeatAction, slot)
-	if ok2 and not isSecret(cur) and not (ok3 and isSecret(auto)) then
-		b:SetChecked((cur or (ok3 and auto)) and true or false)
+	local c = b.content
+	if not c then return end
+	local spell = (c.t == "spell" and c.id) or (c.t == "macro" and MacroSpell(c)) or nil
+	if spell then
+		local ok, usable, noMana = pcall(C_Spell.IsSpellUsable, spell)
+		if ok and not isSecret(usable) and not isSecret(noMana) then
+			if usable then b.icon:SetVertexColor(1, 1, 1)
+			elseif noMana then b.icon:SetVertexColor(0.5, 0.5, 1)
+			else b.icon:SetVertexColor(0.4, 0.4, 0.4) end
+		end
+		local ok2, cur = pcall(C_Spell.IsCurrentSpell, spell)
+		if ok2 and not isSecret(cur) then b:SetChecked(cur and true or false) end
+	elseif c.t == "item" then
+		if b.itemCount == 0 then b.icon:SetVertexColor(0.4, 0.4, 0.4) else b.icon:SetVertexColor(1, 1, 1) end
+		b:SetChecked(false)
+	else
+		b.icon:SetVertexColor(1, 1, 1)
+		b:SetChecked(false)
 	end
 end
 
 local function UpdateButton(b)
-	local slot = b.slot
-	if not slot then return end
-	local tex = GetActionTexture(slot)
-	b.has = tex and true or false
-	if tex then
-		b.icon:SetTexture(tex)
+	local c = b.content
+	b.has = c and true or false
+	if c then
+		local ok, tex = pcall(ContentTexture, c)
+		b.icon:SetTexture((ok and tex) or 134400)
 		b.icon:Show()
 	else
 		b.icon:Hide()
 		b.cd:Clear()
+		b.count:SetText("")
 		b:SetChecked(false)
 	end
-	local ok, text = pcall(CountText, slot)
-	pcall(b.count.SetText, b.count, (ok and tex and text) or "")
 	b.hotkey:SetText(ShortKey(GetBindingKey and GetBindingKey(b.command)))
-	if tex then
+	if c then
+		UpdateCount(b)
 		UpdateCooldown(b)
 		UpdateState(b)
 	end
@@ -363,27 +399,79 @@ local function UpdateFrame(b, cursor)
 	for _, t in ipairs(b.edge) do t:SetShown(show) end
 end
 
+-- 버튼 내용을 보안 버튼에 반영 (전투 중에는 못 바꿈)
+local function ApplyContent(b, c)
+	b.content = c
+	b.itemCount = nil
+	local t, spell, item, macro
+	if c then
+		if c.t == "spell" then t, spell = "spell", c.id
+		elseif c.t == "item" then t, item = "item", "item:" .. c.id
+		elseif c.t == "macro" then
+			macro = MacroIndex(c)
+			if macro then t = "macro" end
+		end
+	end
+	b:SetAttribute("type", t)
+	b:SetAttribute("spell", spell)
+	b:SetAttribute("item", item)
+	b:SetAttribute("macro", macro)
+end
+
 local buttons = {}
+
+-- 커서에 들고 있는 기술/아이템/매크로를 i번 버튼에 넣는다
+local function ReceiveCursor(i)
+	if InCombatLockdown() then return end
+	local kind, a1, _, a3, a4 = GetCursorInfo()
+	local c
+	if kind == "spell" then
+		local id = a4 or a3
+		if id then c = { t = "spell", id = id } end
+	elseif kind == "item" then
+		if a1 then c = { t = "item", id = a1 } end
+	elseif kind == "macro" then
+		local name = a1 and GetMacroInfo(a1)
+		if name then c = { t = "macro", id = a1, name = name } end
+	end
+	if not c then
+		if kind then Print(L.CANT_PLACE) end
+		return
+	end
+	ClearCursor()
+	SetContent(i, c)
+	ApplyContent(buttons[i], c)
+	UpdateButton(buttons[i])
+end
+
+-- 커서에 뭔가 들고 있을 때만 버튼 위에 뜨는 "받는 판". 보안 버튼이 직접 받으면 그 순간 기술이 써져 버린다.
+local catchers = {}
+
 for i = 1, NUM_BUTTONS do
 	local name = "CenterBarButton" .. i
 	local b = CreateFrame("CheckButton", name, bar, "SecureActionButtonTemplate")
 	b:SetSize(BUTTON_SIZE, BUTTON_SIZE)
 	b:SetFrameLevel(bar:GetFrameLevel() + 2)
-	b:SetAttribute("type", "action")
 	b:SetAttribute("checkselfcast", true)
 	b:SetAttribute("checkfocuscast", true)
 	b:RegisterForClicks("AnyUp", "AnyDown")
 	b:RegisterForDrag("LeftButton")
 	b:SetScript("OnDragStart", NoOp)
-	b:SetScript("OnReceiveDrag", NoOp)
 	SecureHandlerWrapScript(b, "OnDragStart", bar, DRAG_START)
-	SecureHandlerWrapScript(b, "OnReceiveDrag", bar, DRAG_RECEIVE)
+	-- 끌어 빼면(커서에 들리면) 버튼을 비운다
+	b:HookScript("OnDragStart", function(self)
+		if InCombatLockdown() or not self.content then return end
+		if GetCursorInfo() then
+			SetContent(i, nil)
+			ApplyContent(self, nil)
+			UpdateButton(self)
+		end
+	end)
 
-	-- 칸 바탕 + 테두리(격자)
+	-- 빈 칸 테두리: 예전 센터바와 같은 게임 기본 퀵슬롯 테두리를 옅게
 	b.bg = b:CreateTexture(nil, "BACKGROUND")
 	b.bg:SetAllPoints()
 	b.bg:SetColorTexture(0, 0, 0, 0)
-	-- 빈 칸 테두리: 예전 센터바와 같은 게임 기본 퀵슬롯 테두리를 옅게
 	local slotTex = b:CreateTexture(nil, "BORDER")
 	slotTex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
 	slotTex:SetPoint("TOPLEFT", -14, 14)
@@ -418,12 +506,17 @@ for i = 1, NUM_BUTTONS do
 	local ct = b:GetCheckedTexture()
 	if ct then ct:SetVertexColor(1, 0.82, 0, 0.3) ct:SetBlendMode("ADD") end
 
-	b:SetScript("PostClick", function(self) UpdateState(self) if not self.has then self:SetChecked(false) end end)
+	b:SetScript("PostClick", function(self)
+		if self.content then UpdateState(self) else self:SetChecked(false) end
+	end)
 	b:SetScript("OnEnter", function(self)
-		if db and db.tooltips and self.has then
+		local c = self.content
+		if db and db.tooltips and c then
 			if GameTooltip_SetDefaultAnchor then GameTooltip_SetDefaultAnchor(GameTooltip, self)
 			else GameTooltip:SetOwner(self, "ANCHOR_RIGHT") end
-			GameTooltip:SetAction(self.slot)
+			if c.t == "spell" then pcall(GameTooltip.SetSpellByID, GameTooltip, c.id)
+			elseif c.t == "item" then pcall(GameTooltip.SetItemByID, GameTooltip, c.id)
+			else GameTooltip:SetText(c.name or "") end
 			GameTooltip:Show()
 		end
 	end)
@@ -433,9 +526,26 @@ for i = 1, NUM_BUTTONS do
 	b.command = "CLICK " .. name .. ":LeftButton"
 	_G["BINDING_NAME_" .. b.command] = L.BUTTON:format(i)
 	buttons[i] = b
+
+	local catch = CreateFrame("Button", nil, UIParent)
+	catch:SetAllPoints(b)
+	catch:SetFrameStrata("HIGH")
+	catch:RegisterForClicks("AnyUp")
+	catch:SetScript("OnClick", function() ReceiveCursor(i) end)
+	catch:SetScript("OnReceiveDrag", function() ReceiveCursor(i) end)
+	catch:Hide()
+	catchers[i] = catch
 end
 BINDING_HEADER_CENTERBAR = L.TITLE
 BINDING_NAME_CENTERBAR_NEXTSLOT = L.NEXT_SLOT
+
+local function UpdateCatchers(cursor)
+	local on = cursor and not InCombatLockdown()
+	for i, c in ipairs(catchers) do
+		local show = (on and buttons[i]:IsVisible()) and true or false
+		if c:IsShown() ~= show then c:SetShown(show) end
+	end
+end
 
 local function UpdateAllButtons()
 	if not db then return end
@@ -444,6 +554,28 @@ local function UpdateAllButtons()
 		UpdateButton(b)
 		UpdateFrame(b, cursor)
 	end
+end
+
+-- 예전 버전에서 액션바 칸에 넣어 둔 기술을 한 번만 가져온다 (이미 채운 버튼은 건드리지 않음)
+local function ImportOld()
+	if db.imported or InCombatLockdown() or not GetActionInfo then return end
+	for slot, from in ipairs(IMPORT_FROM) do
+		for i = 1, NUM_BUTTONS do
+			if not Content(i, slot) then
+				local action = (i <= 12) and (from[1] + i - 1) or (from[2] + i - 13)
+				local ok, t, id = pcall(GetActionInfo, action)
+				if ok and id and not isSecret(id) then
+					if t == "spell" or t == "item" then
+						SetContent(i, { t = t, id = id }, slot)
+					elseif t == "macro" then
+						local name = GetMacroInfo(id)
+						if name then SetContent(i, { t = "macro", id = id, name = name }, slot) end
+					end
+				end
+			end
+		end
+	end
+	db.imported = true
 end
 
 ---------------------------------------------------------------------------
@@ -460,9 +592,8 @@ local function ApplyLayout()
 		local x, y = ButtonOffset(i)
 		b:ClearAllPoints()
 		b:SetPoint("CENTER", bar, "CENTER", x, y)
-		b.slot = ButtonAction(i, slot)
 		b:SetAttribute("cb-lock", lock and true or nil)
-		b:SetAttribute("action", b.slot)
+		ApplyContent(b, Content(i, slot))
 		if enabled[i] then b:Show() else b:Hide() end
 	end
 	UpdateAllButtons()
@@ -505,10 +636,15 @@ end
 -- 주기 갱신: 사용 가능 여부·테두리(0.2초), 마우스 올렸을 때만 보이기(투명도라 전투 중에도 됨)
 local FADE_ALPHA = 0
 bar:SetScript("OnUpdate", function(self, elapsed)
-	self.t = (self.t or 0) + elapsed
-	if self.t < 0.2 or not db then return end
-	self.t = 0
+	if not db then return end
 	local cursor = GetCursorInfo and GetCursorInfo() and true or false
+	if cursor ~= self.cursor then
+		self.cursor = cursor
+		UpdateCatchers(cursor)
+	end
+	self.t = (self.t or 0) + elapsed
+	if self.t < 0.2 then return end
+	self.t = 0
 	for _, b in ipairs(buttons) do
 		if b:IsShown() then
 			UpdateState(b)
@@ -535,9 +671,10 @@ end)
 -- 게임 쪽 변화가 있으면 다시 그린다
 local watch = CreateFrame("Frame")
 for _, e in ipairs({
-	"PLAYER_ENTERING_WORLD", "ACTIONBAR_SLOT_CHANGED", "ACTIONBAR_UPDATE_COOLDOWN", "ACTIONBAR_UPDATE_STATE",
-	"ACTIONBAR_UPDATE_USABLE", "SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES", "SPELL_UPDATE_USABLE",
-	"SPELL_UPDATE_ICON", "UPDATE_BINDINGS", "BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UPDATE_SHAPESHIFT_FORM",
+	"PLAYER_ENTERING_WORLD", "ACTIONBAR_UPDATE_COOLDOWN", "ACTIONBAR_UPDATE_STATE", "ACTIONBAR_UPDATE_USABLE",
+	"SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES", "SPELL_UPDATE_USABLE", "SPELL_UPDATE_ICON", "SPELLS_CHANGED",
+	"UPDATE_BINDINGS", "BAG_UPDATE_DELAYED", "BAG_UPDATE_COOLDOWN", "PLAYER_EQUIPMENT_CHANGED", "UPDATE_SHAPESHIFT_FORM",
+	"PLAYER_TARGET_CHANGED", "CURRENT_SPELL_CAST_CHANGED",
 }) do
 	pcall(watch.RegisterEvent, watch, e)
 end
@@ -547,7 +684,7 @@ watch:SetScript("OnEvent", UpdateAllButtons)
 -- 공개 API (설정 창, hyveo 애드온 센터에서 사용)
 ---------------------------------------------------------------------------
 local function SetSlot(s)
-	if not db or not SLOTS[s] then return end
+	if not db or type(s) ~= "number" or s < 1 or s > NUM_SLOTS or s ~= math.floor(s) then return end
 	db.specSlot[CurrentSpec()] = s
 	ApplyAll()
 	Print(L.SLOT_NOW:format(s))
@@ -573,21 +710,6 @@ CenterBar = {
 	GetSlot = function() return db and CurrentSlot() or 1 end,
 	SetSlot = SetSlot,
 	NextSlot = function() SetSlot(CurrentSlot() % NUM_SLOTS + 1) end,
-	GetSlotInfo = function(s) return SLOTS[s] end,
-	-- 지금 슬롯이 쓰는 액션바 페이지 (kind = "main" 버튼 1~12, "extra" 버튼 13~18)
-	GetSlotPage = function(kind)
-		if not db then return 1 end
-		local s = CurrentSlot()
-		local o = db.slotPages[s]
-		return (o and o[kind]) or SLOTS[s][kind]
-	end,
-	SetSlotPage = function(kind, page)
-		if not db then return end
-		local s = CurrentSlot()
-		db.slotPages[s] = db.slotPages[s] or {}
-		db.slotPages[s][kind] = page
-		ApplyAll()
-	end,
 	-- 바 전체를 조금씩 옮기기
 	Nudge = function(dx, dy)
 		if not db then return end
@@ -607,8 +729,10 @@ CenterBar = {
 	Apply = function() ApplyAll() end,
 	Reset = function()
 		if InCombatLockdown() then Print(L.COMBAT_WAIT) return end
+		local sets, specSlot = db.sets, db.specSlot -- 버튼에 넣은 기술은 지우지 않는다
 		wipe(db)
 		CopyDefaults(db, DEFAULTS)
+		db.sets, db.specSlot, db.imported = sets, specSlot, true
 		ApplyAll()
 		Print(L.RESET)
 	end,
@@ -635,6 +759,9 @@ ev:RegisterEvent("PLAYER_REGEN_ENABLED")
 ev:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 ev:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 ev:RegisterEvent("CVAR_UPDATE")
+ev:RegisterEvent("PLAYER_ENTERING_WORLD")
+ev:RegisterEvent("UPDATE_MACROS")
+ev:RegisterEvent("PLAYER_REGEN_DISABLED")
 ev:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" then
 		if arg1 ~= ADDON_NAME then return end
@@ -645,7 +772,19 @@ ev:SetScript("OnEvent", function(_, event, arg1)
 		EnsurePositions()
 	elseif event == "PLAYER_LOGIN" then
 		ApplyAll()
+	elseif event == "PLAYER_ENTERING_WORLD" then
+		-- 액션바 정보는 이때부터 읽을 수 있다
+		if db and not db.imported and not InCombatLockdown() then
+			ImportOld()
+			ApplyAll()
+		end
+	elseif event == "UPDATE_MACROS" then
+		-- 매크로 순서가 바뀌면 번호가 달라지므로 이름으로 다시 찾는다
+		if db and not InCombatLockdown() then ApplyLayout() else pending = true end
+	elseif event == "PLAYER_REGEN_DISABLED" then
+		UpdateCatchers(false)
 	elseif event == "PLAYER_REGEN_ENABLED" then
+		if db and not db.imported then ImportOld() pending = true end
 		if pending then ApplyAll() end
 	elseif event == "CVAR_UPDATE" then
 		if db and not InCombatLockdown() then ApplyLayout() end
@@ -666,7 +805,7 @@ SlashCmdList.CENTERBAR = function(msg)
 	if msg == "" then
 		CenterBar.ToggleOptions()
 	elseif n and (msg == tostring(n) or msg:find("^slot") or msg:find("^슬롯")) then
-		if SLOTS[n] then SetSlot(n) else Print(L.HELP) end
+		if n >= 1 and n <= NUM_SLOTS then SetSlot(n) else Print(L.HELP) end
 	elseif msg == "next" or msg == "다음" then
 		CenterBar.NextSlot()
 	elseif msg == "lock" or msg == "잠금" then
