@@ -11,11 +11,8 @@ if GetLocale() == "koKR" then
 		VIS_MOUSE  = "마우스 올렸을 때",
 		SCALE      = "크기",
 		ALPHA      = "투명도",
-		GAP        = "버튼 간격",
-		INNER      = "캐릭터와 거리",
-		SHAPE      = "모양",
-		SHAPE_ARC  = "둥글게",
-		SHAPE_GRID = "반듯하게",
+		PRESET     = "배치",
+		GAP        = "퍼짐 (간격)",
 		SLOT       = "슬롯 (지금 특성)",
 		GRID       = "빈 칸도 테두리 보이기",
 		TOOLTIPS   = "버튼 툴팁 보이기",
@@ -35,11 +32,8 @@ else
 		VIS_MOUSE  = "On mouseover",
 		SCALE      = "Scale",
 		ALPHA      = "Opacity",
-		GAP        = "Button gap",
-		INNER      = "Distance from character",
-		SHAPE      = "Shape",
-		SHAPE_ARC  = "Round",
-		SHAPE_GRID = "Straight",
+		PRESET     = "Layout",
+		GAP        = "Spread",
 		SLOT       = "Slot (this spec)",
 		GRID       = "Show borders on empty slots",
 		TOOLTIPS   = "Show button tooltips",
@@ -154,8 +148,26 @@ local function Check(label, key)
 	y = y - 28
 end
 
+-- 배치 고르기 (버튼 5개를 한 줄에)
+do
+	Label(L2.PRESET)
+	y = y - 22
+	local btns = {}
+	for i = 1, CenterBar.NUM_PRESETS do
+		local b = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
+		b:SetSize(74, 22)
+		b:SetPoint("TOPLEFT", 18 + (i - 1) * 77, y + 4)
+		b:SetText(CenterBar.L.PRESETS[i])
+		b:SetScript("OnClick", function() CenterBar.Set("preset", i) Refresh() end)
+		btns[i] = b
+	end
+	refreshers[#refreshers + 1] = function()
+		for i, b in ipairs(btns) do b:SetEnabled(CenterBar.Get("preset") ~= i) end
+	end
+	y = y - 34
+end
+
 Choice(L2.COUNT, "count", { { text = "6", value = 6 }, { text = "12", value = 12 }, { text = "18", value = 18 } })
-Choice(L2.SHAPE, "shape", { { text = L2.SHAPE_ARC, value = "arc" }, { text = L2.SHAPE_GRID, value = "grid" } })
 Choice(L2.VIS, "visibility", {
 	{ text = L2.VIS_ALWAYS, value = "always" },
 	{ text = L2.VIS_COMBAT, value = "combat" },
@@ -168,9 +180,7 @@ Stepper(L2.SCALE, num("scale"), set("scale"), 0.05, 0.5, 2.0, "%.2f")
 y = y - 30
 Stepper(L2.ALPHA, num("alpha"), set("alpha"), 0.1, 0.1, 1.0, "%.1f")
 y = y - 30
-Stepper(L2.GAP, num("gap"), set("gap"), 1, 0, 20, "%d")
-y = y - 30
-Stepper(L2.INNER, num("inner"), set("inner"), 5, 20, 300, "%d")
+Stepper(L2.GAP, num("step"), set("step"), 1, 6, 16, "%d")
 y = y - 38
 
 local slotOpts = {}

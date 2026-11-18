@@ -18,6 +18,7 @@ if GetLocale() == "koKR" then
 		COMBAT_WAIT = "전투가 끝나면 적용할게요.",
 		LOCKED      = "센터바를 잠갔어요.",
 		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
+		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
 		RESET       = "센터바 위치와 설정을 처음으로 되돌렸어요. (버튼에 넣은 기술은 그대로예요)",
 		HELP        = "/cb — 설정 창  |  /cb 1, /cb 2, /cb 3 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
 		HANDLE      = "센터바 — 드래그해서 옮기기",
@@ -32,6 +33,7 @@ else
 		COMBAT_WAIT = "Will apply after combat.",
 		LOCKED      = "CenterBar locked.",
 		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
+		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
 		RESET       = "CenterBar position and settings reset. (Your spells stay on the buttons)",
 		HELP        = "/cb — options  |  /cb 1, /cb 2, /cb 3 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
 		HANDLE      = "CenterBar — drag to move",
@@ -62,17 +64,46 @@ local SLOTS = {
 }
 local NUM_SLOTS = #SLOTS
 
+-- 배치: 화면 가운데(캐릭터)를 0,0으로 본 버튼 18개의 칸 좌표. 실제 거리 = 좌표 x 간격(step, 기본 10).
+-- 예전 센터바와 같은 좌표 체계라 같은 자리에 놓인다.
+local PRESETS = {
+	{ -- 기본: 세로 3줄, 가운데 줄이 살짝 어긋남
+		x = { -14, -14, -14, -19, -19, -19, 14, 14, 14, 19, 19, 19, -24, -24, -24, 24, 24, 24 },
+		y = { -5, 0, 5, -7, -2, 3, -5, 0, 5, 3, -2, -7, -5, 0, 5, -5, 0, 5 },
+	},
+	{ -- 둥글게: 캐릭터를 감싸는 호
+		x = { -25, -29, -31, -31, -29, -25, 25, 29, 31, 31, 29, 25, -36, -38, -36, 36, 38, 36 },
+		y = { 15, 9, 3, -3, -9, -15, 15, 9, 3, -3, -9, -15, 9, 0, -9, 9, 0, -9 },
+	},
+	{ -- 세로 3줄 1: 반듯하게
+		x = { -20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20, -25, -25, -25, 25, 25, 25 },
+		y = { 5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5, 5, 0, -5 },
+	},
+	{ -- 세로 3줄 2: 넓게, 가운데 줄 어긋남
+		x = { -18, -18, -18, -23, -23, -23, 18, 18, 18, 23, 23, 23, -28, -28, -28, 28, 28, 28 },
+		y = { -5, 0, 5, 3, -2, -7, -5, 0, 5, 3, -2, -7, -5, 0, 5, -5, 0, 5 },
+	},
+	{ -- 세로 3줄 3: 줄마다 어긋남
+		x = { -20, -20, -20, -15, -15, -15, 15, 15, 15, 20, 20, 20, -25, -25, -25, 25, 25, 25 },
+		y = { 5, 0, -5, 3, -2, -7, 3, -2, -7, 5, 0, -5, 3, -2, -7, 3, -2, -7 },
+	},
+}
+-- 표시 개수용 열 묶음 (한쪽에 3열)
+local COLUMNS = {
+	{ { 1, 2, 3 }, { 4, 5, 6 }, { 13, 14, 15 } },
+	{ { 7, 8, 9 }, { 10, 11, 12 }, { 16, 17, 18 } },
+}
+
 local DEFAULTS = {
-	version    = 2,
-	point      = nil,        -- 저장 위치 (nil이면 화면 가운데 조금 아래)
+	version    = 3,
+	point      = nil,        -- 저장 위치 (nil이면 화면 한가운데)
 	x          = 0,
-	y          = -60,
+	y          = 0,
 	scale      = 1.0,
 	alpha      = 1.0,
-	gap        = 4,          -- 버튼 사이 간격
-	inner      = 90,         -- 캐릭터와 안쪽 열 사이 거리
+	preset     = 1,          -- PRESETS 번호
+	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
-	shape      = "arc",      -- arc(둥글게) / grid(반듯하게)
 	grid       = true,       -- 빈 칸도 테두리 보이기
 	visibility = "always",   -- always / combat / mouseover
 	locked     = true,
@@ -96,12 +127,13 @@ local function CopyDefaults(dst, src)
 end
 
 local function Migrate()
-	if (db.version or 1) < 2 then
-		-- 1.0.x: 특성별 페이지 → 슬롯. 모양과 거리는 새 기본값으로.
-		db.specPages, db.extraPage = nil, nil
-		db.inner = DEFAULTS.inner
-		db.version = 2
+	if (db.version or 1) < 3 then
+		-- 1.0.x~1.1.0: 배치 방식이 바뀌어 위치를 화면 가운데로 되돌린다
+		db.specPages, db.extraPage, db.shape, db.gap, db.inner = nil, nil, nil, nil, nil
+		db.point, db.relPoint, db.x, db.y = nil, nil, 0, 0
+		db.version = 3
 	end
+	if not PRESETS[db.preset] then db.preset = 1 end
 end
 
 local function CurrentSpec()
@@ -115,32 +147,9 @@ local function CurrentSlot()
 	return s
 end
 
----------------------------------------------------------------------------
--- 버튼 자리 (예전 센터바와 같은 번호 → 같은 자리)
---   왼쪽  안 1~3   가운데 4~6    바깥 13~15
---   오른쪽 안 7~9  가운데 10~12  바깥 16~18
---   row: 0 위, 1 가운데, 2 아래
--- 표시 개수 6 = 안쪽 두 열, 12 = 가운데 열까지, 18 = 전부.
----------------------------------------------------------------------------
-local SPOTS = {
-	{ -1, 0, 2 }, { -1, 0, 1 }, { -1, 0, 0 },
-	{ -1, 1, 2 }, { -1, 1, 1 }, { -1, 1, 0 },
-	{  1, 0, 2 }, {  1, 0, 1 }, {  1, 0, 0 },
-	{  1, 1, 0 }, {  1, 1, 1 }, {  1, 1, 2 },
-	{ -1, 2, 2 }, { -1, 2, 1 }, { -1, 2, 0 },
-	{  1, 2, 2 }, {  1, 2, 1 }, {  1, 2, 0 },
-}
-
 local function ButtonOffset(i)
-	local side, depth, row = SPOTS[i][1], SPOTS[i][2], SPOTS[i][3]
-	local step = BUTTON_SIZE + db.gap
-	local radius = db.inner + depth * step + BUTTON_SIZE / 2
-	if db.shape == "grid" then
-		return side * radius, (1 - row) * step
-	end
-	-- 둥글게: 캐릭터를 중심으로 부채꼴처럼 펼친다 (같은 줄은 같은 각도, 바깥 열일수록 더 벌어짐)
-	local angle = (1 - row) * (step / (db.inner + BUTTON_SIZE / 2))
-	return side * radius * math.cos(angle), radius * math.sin(angle)
+	local p = PRESETS[db.preset]
+	return p.x[i] * db.step, p.y[i] * db.step
 end
 
 local function ButtonAction(i, slot)
@@ -151,9 +160,26 @@ local function ButtonAction(i, slot)
 	return (s.extra - 1) * PAGE_SLOTS + s.offset + (i - PAGE_SLOTS)
 end
 
-local function ButtonEnabled(i)
-	local depth = SPOTS[i][2]
-	return depth < (db.count / 6)
+-- 표시 개수 6/12/18: 양쪽에서 캐릭터와 가까운 열부터 보인다
+local function EnabledSet()
+	local set, shown = {}, db.count / 6
+	local xs = PRESETS[db.preset].x
+	for _, side in ipairs(COLUMNS) do
+		local order = {}
+		for idx, col in ipairs(side) do
+			local sum = 0
+			for _, i in ipairs(col) do sum = sum + math.abs(xs[i]) end
+			order[idx] = { col = col, d = sum, idx = idx }
+		end
+		table.sort(order, function(a, b)
+			if a.d ~= b.d then return a.d < b.d end
+			return a.idx < b.idx
+		end)
+		for k = 1, math.min(shown, #order) do
+			for _, i in ipairs(order[k].col) do set[i] = true end
+		end
+	end
+	return set
 end
 
 ---------------------------------------------------------------------------
@@ -192,8 +218,17 @@ end)
 handle:SetScript("OnLeave", function() GameTooltip:Hide() end)
 handle:Hide()
 
--- 드래그 놓기/집기는 보안 코드에서 처리한다.
--- 블리자드 기본 드래그 코드를 애드온 버튼에서 그대로 쓰면 "기능이 차단되었습니다"가 뜬다.
+---------------------------------------------------------------------------
+-- 버튼
+--
+-- 게임 기본 액션 버튼 틀(ActionBarButtonTemplate)을 애드온이 만들어 쓰면, 재사용 대기시간 같은
+-- "비밀 값"을 다루는 기본 UI 코드가 막혀 오류가 난다. 그래서 누르는 동작만 게임 보안 버튼에 맡기고
+-- 아이콘·대기시간·개수·테두리는 직접 그린다.
+---------------------------------------------------------------------------
+local WHITE = "Interface\\Buttons\\WHITE8X8"
+local isSecret = issecretvalue or function() return false end
+
+-- 끌어다 놓기/빼기는 보안 코드에서 처리 (애드온 코드가 직접 하면 "기능이 차단되었습니다"가 뜬다)
 local DRAG_START = [[
 	local mod = (IsModifiedClick and IsModifiedClick("PICKUPACTION")) or IsShiftKeyDown()
 	if self:GetAttribute("cb-lock") and not mod then return false end
@@ -204,74 +239,183 @@ local DRAG_RECEIVE = [[
 ]]
 local function NoOp() end
 
--- 아이콘이 칸을 꽉 채우고 테두리는 예전 퀵슬롯 모양으로
-local function StyleButton(b)
-	local icon = b.icon or _G[b:GetName() .. "Icon"]
-	if icon then
-		if b.IconMask and icon.RemoveMaskTexture then icon:RemoveMaskTexture(b.IconMask) end
-		icon:ClearAllPoints()
-		icon:SetAllPoints(b)
-		icon:SetTexCoord(0.06, 0.94, 0.06, 0.94)
+local function Edge(b, layer, r, g, bl, a, size)
+	local t = {}
+	for k = 1, 4 do
+		t[k] = b:CreateTexture(nil, layer)
+		t[k]:SetColorTexture(r, g, bl, a)
 	end
-	local nt = b:GetNormalTexture()
-	if nt then nt:SetAlpha(0) end
-	for _, key in ipairs({ "SlotBackground", "SlotArt", "FloatingBG" }) do
-		if b[key] then b[key]:SetAlpha(0) end
-	end
-	b:SetPushedTexture("Interface\\Buttons\\UI-Quickslot-Depress")
-	b:SetHighlightTexture("Interface\\Buttons\\ButtonHilight-Square", "ADD")
-	b:SetCheckedTexture("Interface\\Buttons\\CheckButtonHilight")
-	for _, tex in ipairs({ b:GetPushedTexture(), b:GetHighlightTexture(), b:GetCheckedTexture() }) do
-		tex:ClearAllPoints()
-		tex:SetAllPoints(b)
-	end
-	local ct = b:GetCheckedTexture()
-	if ct then ct:SetBlendMode("ADD") end
-	for _, key in ipairs({ "cooldown", "Flash", "Border", "NewActionTexture", "SpellHighlightTexture" }) do
-		local r = b[key]
-		if r and r.ClearAllPoints then
-			r:ClearAllPoints()
-			r:SetAllPoints(b)
+	t[1]:SetPoint("TOPLEFT") t[1]:SetPoint("TOPRIGHT") t[1]:SetHeight(size)
+	t[2]:SetPoint("BOTTOMLEFT") t[2]:SetPoint("BOTTOMRIGHT") t[2]:SetHeight(size)
+	t[3]:SetPoint("TOPLEFT") t[3]:SetPoint("BOTTOMLEFT") t[3]:SetWidth(size)
+	t[4]:SetPoint("TOPRIGHT") t[4]:SetPoint("BOTTOMRIGHT") t[4]:SetWidth(size)
+	return t
+end
+
+local function ShortKey(key)
+	if not key then return "" end
+	local text = (GetBindingText and GetBindingText(key, 1)) or key
+	text = text:gsub("SHIFT%-", "S"):gsub("CTRL%-", "C"):gsub("ALT%-", "A")
+	text = text:gsub("s%-", "S"):gsub("c%-", "C"):gsub("a%-", "A")
+	return text
+end
+
+local function UpdateCooldown(b)
+	local slot, cd = b.slot, b.cd
+	if not slot then return end
+	-- 새 방식: 게임이 주는 "지속시간 객체"를 그대로 넘긴다 (값을 들여다보지 않으므로 전투 중에도 됨)
+	if C_ActionBar and C_ActionBar.GetActionCooldownDuration and cd.SetCooldownFromDurationObject then
+		local okInfo, info = pcall(C_ActionBar.GetActionCooldown, slot)
+		if okInfo and type(info) == "table" and info.isActive == false then
+			cd:Clear()
+			return
 		end
+		local ok, obj = pcall(C_ActionBar.GetActionCooldownDuration, slot)
+		if ok and obj and pcall(cd.SetCooldownFromDurationObject, cd, obj) then return end
+	end
+	if GetActionCooldown then
+		local ok, start, duration, _, modRate = pcall(GetActionCooldown, slot)
+		if ok and start ~= nil then pcall(cd.SetCooldown, cd, start, duration, modRate) end
 	end
 end
 
-local buttons, frames = {}, {}
+local function CountText(slot)
+	if C_ActionBar and C_ActionBar.GetActionDisplayCount then
+		return C_ActionBar.GetActionDisplayCount(slot) or ""
+	end
+	if (IsConsumableAction and IsConsumableAction(slot)) or (IsStackableAction and IsStackableAction(slot)) then
+		local n = GetActionCount(slot)
+		return n > 9999 and "*" or tostring(n)
+	end
+	if GetActionCharges then
+		local charges, maxCharges = GetActionCharges(slot)
+		if maxCharges and maxCharges > 1 then return tostring(charges) end
+	end
+	return ""
+end
+
+local function UpdateState(b)
+	local slot = b.slot
+	if not slot or not b.has then return end
+	local ok, usable, noMana = pcall(IsUsableAction, slot)
+	if ok and not isSecret(usable) and not isSecret(noMana) then
+		if usable then b.icon:SetVertexColor(1, 1, 1)
+		elseif noMana then b.icon:SetVertexColor(0.5, 0.5, 1)
+		else b.icon:SetVertexColor(0.4, 0.4, 0.4) end
+	end
+	local ok2, cur = pcall(IsCurrentAction, slot)
+	local ok3, auto = pcall(IsAutoRepeatAction, slot)
+	if ok2 and not isSecret(cur) and not (ok3 and isSecret(auto)) then
+		b:SetChecked((cur or (ok3 and auto)) and true or false)
+	end
+end
+
+local function UpdateButton(b)
+	local slot = b.slot
+	if not slot then return end
+	local tex = GetActionTexture(slot)
+	b.has = tex and true or false
+	if tex then
+		b.icon:SetTexture(tex)
+		b.icon:Show()
+	else
+		b.icon:Hide()
+		b.cd:Clear()
+		b:SetChecked(false)
+	end
+	local ok, text = pcall(CountText, slot)
+	pcall(b.count.SetText, b.count, (ok and tex and text) or "")
+	b.hotkey:SetText(ShortKey(GetBindingKey and GetBindingKey(b.command)))
+	if tex then
+		UpdateCooldown(b)
+		UpdateState(b)
+	end
+end
+
+local function UpdateFrame(b, cursor)
+	local show = db.grid or b.has or cursor
+	if b.bg:IsShown() ~= (show and true or false) then
+		b.bg:SetShown(show)
+		for _, t in ipairs(b.edge) do t:SetShown(show) end
+	end
+end
+
+local buttons = {}
 for i = 1, NUM_BUTTONS do
 	local name = "CenterBarButton" .. i
-	local b = CreateFrame("CheckButton", name, bar, "ActionBarButtonTemplate")
-	b:SetID(0) -- 페이지 계산을 블리자드 바에 맡기지 않고 action 속성을 그대로 쓰게 함
+	local b = CreateFrame("CheckButton", name, bar, "SecureActionButtonTemplate")
 	b:SetSize(BUTTON_SIZE, BUTTON_SIZE)
 	b:SetFrameLevel(bar:GetFrameLevel() + 2)
 	b:SetAttribute("type", "action")
 	b:SetAttribute("checkselfcast", true)
 	b:SetAttribute("checkfocuscast", true)
-	b:SetAttribute("showgrid", 1) -- 빈 칸도 숨기지 않아야 기술을 끌어다 놓을 수 있다
+	b:RegisterForClicks("AnyUp", "AnyDown")
 	b:RegisterForDrag("LeftButton")
 	b:SetScript("OnDragStart", NoOp)
 	b:SetScript("OnReceiveDrag", NoOp)
 	SecureHandlerWrapScript(b, "OnDragStart", bar, DRAG_START)
 	SecureHandlerWrapScript(b, "OnReceiveDrag", bar, DRAG_RECEIVE)
-	StyleButton(b)
-	-- 단축키 표시: Bindings.xml의 CLICK 바인딩과 같은 이름
-	b.commandName = "CLICK " .. name .. ":LeftButton"
-	_G["BINDING_NAME_CLICK " .. name .. ":LeftButton"] = L.BUTTON:format(i)
-	buttons[i] = b
 
-	-- 칸 테두리 (버튼 위에 그리지만 마우스는 받지 않음)
-	local fr = CreateFrame("Frame", nil, bar)
-	fr:SetAllPoints(b)
-	fr:SetFrameLevel(bar:GetFrameLevel() + 6)
-	fr:EnableMouse(false)
-	fr.tex = fr:CreateTexture(nil, "OVERLAY")
-	fr.tex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
-	fr.tex:SetPoint("TOPLEFT", -14, 14)
-	fr.tex:SetPoint("BOTTOMRIGHT", 15, -15)
-	fr.tex:SetAlpha(0.6)
-	frames[i] = fr
+	-- 칸 바탕 + 테두리(격자)
+	b.bg = b:CreateTexture(nil, "BACKGROUND")
+	b.bg:SetAllPoints()
+	b.bg:SetColorTexture(0, 0, 0, 0.35)
+	b.edge = Edge(b, "OVERLAY", 0.75, 0.75, 0.8, 0.9, 2)
+
+	-- 아이콘: 칸을 꽉 채움
+	b.icon = b:CreateTexture(nil, "ARTWORK")
+	b.icon:SetAllPoints()
+	b.icon:SetTexCoord(0.07, 0.93, 0.07, 0.93)
+	b.icon:Hide()
+
+	b.cd = CreateFrame("Cooldown", name .. "Cooldown", b, "CooldownFrameTemplate")
+	b.cd:SetAllPoints()
+
+	local over = CreateFrame("Frame", nil, b)
+	over:SetAllPoints()
+	over:SetFrameLevel(b.cd:GetFrameLevel() + 1)
+	b.count = over:CreateFontString(nil, "OVERLAY", "NumberFontNormal")
+	b.count:SetPoint("BOTTOMRIGHT", -2, 2)
+	b.hotkey = over:CreateFontString(nil, "OVERLAY", "NumberFontNormalSmallGray")
+	b.hotkey:SetPoint("TOPRIGHT", -2, -2)
+
+	b:SetHighlightTexture(WHITE)
+	local hl = b:GetHighlightTexture()
+	if hl then hl:SetVertexColor(1, 1, 1, 0.2) hl:SetBlendMode("ADD") end
+	b:SetPushedTexture(WHITE)
+	local pt = b:GetPushedTexture()
+	if pt then pt:SetVertexColor(0, 0, 0, 0.4) end
+	b:SetCheckedTexture(WHITE)
+	local ct = b:GetCheckedTexture()
+	if ct then ct:SetVertexColor(1, 0.82, 0, 0.3) ct:SetBlendMode("ADD") end
+
+	b:SetScript("PostClick", function(self) UpdateState(self) if not self.has then self:SetChecked(false) end end)
+	b:SetScript("OnEnter", function(self)
+		if db and db.tooltips and self.has then
+			if GameTooltip_SetDefaultAnchor then GameTooltip_SetDefaultAnchor(GameTooltip, self)
+			else GameTooltip:SetOwner(self, "ANCHOR_RIGHT") end
+			GameTooltip:SetAction(self.slot)
+			GameTooltip:Show()
+		end
+	end)
+	b:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+	-- 단축키: Bindings.xml의 CLICK 바인딩과 같은 이름
+	b.command = "CLICK " .. name .. ":LeftButton"
+	_G["BINDING_NAME_" .. b.command] = L.BUTTON:format(i)
+	buttons[i] = b
 end
 BINDING_HEADER_CENTERBAR = L.TITLE
 BINDING_NAME_CENTERBAR_NEXTSLOT = L.NEXT_SLOT
+
+local function UpdateAllButtons()
+	if not db then return end
+	local cursor = GetCursorInfo and GetCursorInfo() and true or false
+	for _, b in ipairs(buttons) do
+		UpdateButton(b)
+		UpdateFrame(b, cursor)
+	end
+end
 
 ---------------------------------------------------------------------------
 -- 적용 (보안 프레임이라 전투 중에는 미뤘다가 전투 끝나면 적용)
@@ -281,15 +425,17 @@ local pending = false
 local function ApplyLayout()
 	local lock = GetCVarBool and GetCVarBool("lockActionBars")
 	local slot = CurrentSlot()
+	local enabled = EnabledSet()
 	for i, b in ipairs(buttons) do
 		local x, y = ButtonOffset(i)
 		b:ClearAllPoints()
 		b:SetPoint("CENTER", bar, "CENTER", x, y)
+		b.slot = ButtonAction(i, slot)
 		b:SetAttribute("cb-lock", lock and true or nil)
-		b:SetAttribute("action", ButtonAction(i, slot))
-		if ButtonEnabled(i) then b:Show() else b:Hide() end
-		if b.UpdateAction then b:UpdateAction(true) end
+		b:SetAttribute("action", b.slot)
+		if enabled[i] then b:Show() else b:Hide() end
 	end
+	UpdateAllButtons()
 end
 
 local function ApplyVisibility()
@@ -324,41 +470,40 @@ local function ApplyAll()
 	handle:SetShown(not db.locked)
 end
 
--- 0.1초마다: 마우스 올렸을 때만 보이기(투명도라 전투 중에도 됨) + 칸 테두리
+-- 주기 갱신: 사용 가능 여부·테두리(0.2초), 마우스 올렸을 때만 보이기(투명도라 전투 중에도 됨)
 local FADE_ALPHA = 0
 bar:SetScript("OnUpdate", function(self, elapsed)
 	self.t = (self.t or 0) + elapsed
-	if self.t < 0.1 or not db then return end
+	if self.t < 0.2 or not db then return end
 	self.t = 0
-	local cursor = GetCursorInfo and GetCursorInfo()
-	for i, b in ipairs(buttons) do
-		local show = b:IsShown() and (db.grid or cursor or HasAction(b:GetAttribute("action") or 0))
-		if frames[i]:IsShown() ~= (show and true or false) then frames[i]:SetShown(show) end
+	local cursor = GetCursorInfo and GetCursorInfo() and true or false
+	for _, b in ipairs(buttons) do
+		if b:IsShown() then
+			UpdateState(b)
+			UpdateFrame(b, cursor)
+		end
 	end
 	local target = db.alpha or 1
 	if db.visibility == "mouseover" and db.locked then
-		local over = self:IsMouseOver(10, -10, -10, 10)
-		if not over then
-			for _, b in ipairs(buttons) do
-				if b:IsShown() and b:IsMouseOver() then over = true break end
-			end
+		local over = false
+		for _, b in ipairs(buttons) do
+			if b:IsShown() and b:IsMouseOver() then over = true break end
 		end
 		if not over and not cursor then target = FADE_ALPHA end
 	end
 	if math.abs(self:GetAlpha() - target) > 0.01 then self:SetAlpha(target) end
 end)
 
--- 툴팁 끄기
-hooksecurefunc(GameTooltip, "SetAction", function(tip, slot)
-	if db and not db.tooltips and slot then
-		for _, b in ipairs(buttons) do
-			if b:GetAttribute("action") == slot and b:IsMouseOver() then
-				tip:Hide()
-				return
-			end
-		end
-	end
-end)
+-- 게임 쪽 변화가 있으면 다시 그린다
+local watch = CreateFrame("Frame")
+for _, e in ipairs({
+	"PLAYER_ENTERING_WORLD", "ACTIONBAR_SLOT_CHANGED", "ACTIONBAR_UPDATE_COOLDOWN", "ACTIONBAR_UPDATE_STATE",
+	"ACTIONBAR_UPDATE_USABLE", "SPELL_UPDATE_COOLDOWN", "SPELL_UPDATE_CHARGES", "SPELL_UPDATE_USABLE",
+	"SPELL_UPDATE_ICON", "UPDATE_BINDINGS", "BAG_UPDATE_DELAYED", "PLAYER_EQUIPMENT_CHANGED", "UPDATE_SHAPESHIFT_FORM",
+}) do
+	pcall(watch.RegisterEvent, watch, e)
+end
+watch:SetScript("OnEvent", UpdateAllButtons)
 
 ---------------------------------------------------------------------------
 -- 공개 API (설정 창, hyveo 애드온 센터에서 사용)
@@ -384,6 +529,7 @@ CenterBar = {
 	SetSlot = SetSlot,
 	NextSlot = function() SetSlot(CurrentSlot() % NUM_SLOTS + 1) end,
 	GetSlotInfo = function(s) return SLOTS[s] end,
+	NUM_PRESETS = #PRESETS,
 	Apply = function() ApplyAll() end,
 	Reset = function()
 		if InCombatLockdown() then Print(L.COMBAT_WAIT) return end
