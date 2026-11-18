@@ -16,7 +16,7 @@ if GetLocale() == "koKR" then
 		LOCKED     = "센터바를 잠갔어요.",
 		UNLOCKED   = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
 		RESET      = "센터바 위치와 설정을 처음으로 되돌렸어요.",
-		HELP       = "/센터바 — 설정 창  |  /센터바 잠금 — 잠금/해제  |  /센터바 초기화 — 처음으로",
+		HELP       = "/cb — 설정 창  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
 		HANDLE     = "센터바 — 드래그해서 옮기기",
 	}
 else
@@ -27,7 +27,7 @@ else
 		LOCKED     = "CenterBar locked.",
 		UNLOCKED   = "CenterBar unlocked. Drag the handle in the middle to move it.",
 		RESET      = "CenterBar position and settings reset.",
-		HELP       = "/centerbar — options  |  /centerbar lock — lock/unlock  |  /centerbar reset — reset",
+		HELP       = "/cb — options  |  /cb lock — lock/unlock  |  /cb reset — reset",
 		HANDLE     = "CenterBar — drag to move",
 	}
 end
@@ -301,9 +301,9 @@ end)
 ---------------------------------------------------------------------------
 -- 명령어
 ---------------------------------------------------------------------------
-SLASH_CENTERBAR1 = "/centerbar"
-SLASH_CENTERBAR2 = "/센터바"
-SLASH_CENTERBAR3 = "/cbar"
+SLASH_CENTERBAR1 = "/cb"
+SLASH_CENTERBAR2 = "/centerbar"
+SLASH_CENTERBAR3 = "/센터바"
 SlashCmdList.CENTERBAR = function(msg)
 	msg = strlower(strtrim(msg or ""))
 	if msg == "" then
