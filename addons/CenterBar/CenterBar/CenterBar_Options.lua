@@ -12,6 +12,8 @@ if GetLocale() == "koKR" then
 		SCALE      = "크기",
 		ALPHA      = "투명도",
 		PRESET     = "배치",
+		MIRROR     = "대칭 이동 (반대쪽 버튼도 같이)",
+		EDIT_TIP   = "이 창이 열려 있는 동안 화면 격자에서 번호 칸을 끌어 버튼을 옮길 수 있어요.",
 		GAP        = "퍼짐 (간격)",
 		SLOT       = "슬롯 (지금 특성)",
 		GRID       = "빈 칸도 테두리 보이기",
@@ -33,6 +35,8 @@ else
 		SCALE      = "Scale",
 		ALPHA      = "Opacity",
 		PRESET     = "Layout",
+		MIRROR     = "Mirror moves (move the opposite button too)",
+		EDIT_TIP   = "While this window is open, drag the numbered boxes on the grid to move buttons.",
 		GAP        = "Spread",
 		SLOT       = "Slot (this spec)",
 		GRID       = "Show borders on empty slots",
@@ -46,7 +50,7 @@ else
 end
 
 local f = CreateFrame("Frame", "CenterBarOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(420, 520)
+f:SetSize(420, 580)
 f:SetPoint("CENTER")
 f:SetFrameStrata("DIALOG")
 f:SetClampedToScreen(true)
@@ -164,7 +168,9 @@ do
 	refreshers[#refreshers + 1] = function()
 		for i, b in ipairs(btns) do b:SetEnabled(CenterBar.Get("preset") ~= i) end
 	end
-	y = y - 34
+	y = y - 28
+	Label(L2.EDIT_TIP, "GameFontDisableSmall")
+	y = y - 22
 end
 
 Choice(L2.COUNT, "count", { { text = "6", value = 6 }, { text = "12", value = 12 }, { text = "18", value = 18 } })
@@ -192,6 +198,7 @@ y = y - 16
 Label(L2.SLOT_TIP2, "GameFontDisableSmall")
 y = y - 26
 
+Check(L2.MIRROR, "mirror")
 Check(L2.GRID, "grid")
 Check(L2.TOOLTIPS, "tooltips")
 Check(L2.LOCK, "locked")
@@ -206,7 +213,116 @@ local bind = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 bind:SetPoint("BOTTOMLEFT", 18, 18)
 bind:SetText(L2.BINDINGS)
 
-f:SetScript("OnShow", Refresh)
+---------------------------------------------------------------------------
+-- 위치 편집: 설정 창이 열려 있는 동안 화면 전체 격자 + 끌어 옮기는 번호 칸
+---------------------------------------------------------------------------
+local edit = CreateFrame("Frame", "CenterBarEditFrame", UIParent)
+edit:SetSize(10, 10)
+edit:SetFrameStrata("HIGH")
+edit:Hide()
+
+local LINES = 60
+local vlines, hlines = {}, {}
+for i = -LINES, LINES do
+	local a = (i == 0) and 0.9 or (i % 5 == 0) and 0.55 or 0.28
+	local r = (i == 0) and 1 or 0
+	vlines[i] = edit:CreateTexture(nil, "BACKGROUND")
+	vlines[i]:SetColorTexture(r, r, r, a)
+	hlines[i] = edit:CreateTexture(nil, "BACKGROUND")
+	hlines[i]:SetColorTexture(r, r, r, a)
+end
+
+local markers = {}
+local function CursorCell()
+	local cx, cy = GetCursorPosition()
+	local s = edit:GetEffectiveScale()
+	local bx, by = edit:GetCenter()
+	local step = CenterBar.Get("step") or 10
+	if not bx then return 0, 0 end
+	return math.floor((cx / s - bx) / step + 0.5), math.floor((cy / s - by) / step + 0.5)
+end
+
+local function Partner(i)
+	local x, y = CenterBar.GetPos(i)
+	for j = 1, CenterBar.NUM_BUTTONS do
+		if j ~= i then
+			local jx, jy = CenterBar.GetPos(j)
+			if jx == -x and jy == y then return j end
+		end
+	end
+end
+
+local function RefreshEdit()
+	if not edit:IsShown() then return end
+	local step = CenterBar.Get("step") or 10
+	edit:SetScale(CenterBar.Get("scale") or 1)
+	edit:ClearAllPoints()
+	edit:SetPoint("CENTER", CenterBarFrame, "CENTER")
+	for i = -LINES, LINES do
+		local c = i * step * 2
+		local w = (i == 0) and 2 or 1
+		vlines[i]:ClearAllPoints()
+		vlines[i]:SetSize(w, 6000)
+		vlines[i]:SetPoint("CENTER", edit, "CENTER", c, 0)
+		hlines[i]:ClearAllPoints()
+		hlines[i]:SetSize(6000, w)
+		hlines[i]:SetPoint("CENTER", edit, "CENTER", 0, c)
+	end
+	for i, m in ipairs(markers) do
+		local x, y = CenterBar.GetPos(i)
+		if x then
+			m:ClearAllPoints()
+			m:SetPoint("CENTER", edit, "CENTER", x * step, y * step)
+			m.text:SetText(i .. "\n" .. x .. "." .. y)
+			m:SetShown(CenterBar.IsButtonShown(i))
+		end
+	end
+end
+
+for i = 1, CenterBar.NUM_BUTTONS do
+	local m = CreateFrame("Button", nil, edit)
+	m:SetSize(36, 36)
+	m.bg = m:CreateTexture(nil, "ARTWORK")
+	m.bg:SetAllPoints()
+	if i > 12 then m.bg:SetColorTexture(0.1, 0.8, 0.3, 0.5) else m.bg:SetColorTexture(0, 0.4, 1, 0.5) end
+	m.text = m:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	m.text:SetPoint("CENTER")
+	m:SetScript("OnMouseDown", function(self)
+		if InCombatLockdown() then return end
+		self.partner = CenterBar.Get("mirror") and Partner(i) or nil
+		self:SetScript("OnUpdate", function()
+			local x, y = CursorCell()
+			local ox, oy = CenterBar.GetPos(i)
+			if x ~= ox or y ~= oy then
+				CenterBar.SetPos(i, x, y)
+				if self.partner then CenterBar.SetPos(self.partner, -x, y) end
+				Refresh()
+			end
+		end)
+	end)
+	m:SetScript("OnMouseUp", function(self) self:SetScript("OnUpdate", nil) end)
+	m:SetScript("OnHide", function(self) self:SetScript("OnUpdate", nil) end)
+	markers[i] = m
+end
+refreshers[#refreshers + 1] = RefreshEdit
+
+-- 전투 중에는 버튼을 옮길 수 없으니 격자를 숨긴다
+edit:RegisterEvent("PLAYER_REGEN_DISABLED")
+edit:RegisterEvent("PLAYER_REGEN_ENABLED")
+edit:SetScript("OnEvent", function(self, event)
+	if event == "PLAYER_REGEN_DISABLED" then
+		self:Hide()
+	elseif f:IsShown() then
+		self:Show()
+		Refresh()
+	end
+end)
+
+f:SetScript("OnShow", function()
+	if not InCombatLockdown() then edit:Show() end
+	Refresh()
+end)
+f:SetScript("OnHide", function() edit:Hide() end)
 
 CenterBarOptions = {
 	Toggle = function() f:SetShown(not f:IsShown()) end,
