@@ -18,7 +18,7 @@ if GetLocale() == "koKR" then
 		COMBAT_WAIT = "전투가 끝나면 적용할게요.",
 		LOCKED      = "센터바를 잠갔어요.",
 		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
-		PRESETS     = { "세로 3줄", "곡선 (기본형식)", "3x3(1)", "3x3(2)", "3x3(3)" },
+		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
 		MM_LEFT     = "왼쪽 클릭: 설정 창",
 		MM_RIGHT    = "오른쪽 클릭: 다음 슬롯",
 		MM_DRAG     = "드래그: 버튼 옮기기",
@@ -37,7 +37,7 @@ else
 		COMBAT_WAIT = "Will apply after combat.",
 		LOCKED      = "CenterBar locked.",
 		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
-		PRESETS     = { "Columns", "Curved", "3x3 (1)", "3x3 (2)", "3x3 (3)" },
+		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
 		MM_LEFT     = "Left-click: options",
 		MM_RIGHT    = "Right-click: next slot",
 		MM_DRAG     = "Drag: move this button",
@@ -49,7 +49,7 @@ else
 end
 CenterBar_L = L
 
-local quiet = false -- 설정의 "채팅 메시지 숨김"
+local quiet = false -- 설정의 "채팅창 메시지 숨김"
 local function Print(msg, always)
 	if quiet and not always then return end
 	print("|cffffd100" .. L.TITLE .. "|r: " .. msg)
@@ -104,13 +104,13 @@ local COLUMNS = {
 }
 
 local DEFAULTS = {
-	version    = 6,
+	version    = 4,
 	point      = nil,        -- 저장 위치 (nil이면 화면 한가운데)
 	x          = 0,
 	y          = 0,
 	scale      = 1.0,
 	alpha      = 1.0,
-	preset     = 1,          -- PRESETS 번호 (1 = 세로 3줄)
+	preset     = 1,          -- PRESETS 번호
 	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
 	grid       = false,      -- 빈 칸도 테두리 보이기 (끄면 빈 칸은 안 보임)
@@ -160,11 +160,8 @@ local function Migrate()
 		db.grid = false
 		db.version = 4
 	end
-	if (db.version or 1) < 6 then
-		-- 1.3.3이 기본 배치를 곡선으로 바꿨던 것을 되돌린다 (그 버전을 거친 경우만)
-		if db.version == 5 and db.preset == 2 then db.preset = 1 db.px, db.py = nil, nil end
-		db.version = 6
-	end
+	if db.version == 5 and db.preset == 2 then db.preset = 1 db.px, db.py = nil, nil end -- 1.3.3의 곡선 기본값 되돌림
+	if (db.version or 1) > 4 then db.version = 4 end
 	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 1 end
 end
 
