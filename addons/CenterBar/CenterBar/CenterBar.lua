@@ -448,6 +448,7 @@ end
 local pending = false
 
 local function ApplyLayout()
+	EnsurePositions()
 	local lock = GetCVarBool and GetCVarBool("lockActionBars")
 	local slot = CurrentSlot()
 	local enabled = EnabledSet()
@@ -637,6 +638,7 @@ ev:SetScript("OnEvent", function(_, event, arg1)
 		db = CenterBarDB
 		CopyDefaults(db, DEFAULTS)
 		Migrate()
+		EnsurePositions()
 	elseif event == "PLAYER_LOGIN" then
 		ApplyAll()
 	elseif event == "PLAYER_REGEN_ENABLED" then
