@@ -382,8 +382,14 @@ for i = 1, NUM_BUTTONS do
 	-- 칸 바탕 + 테두리(격자)
 	b.bg = b:CreateTexture(nil, "BACKGROUND")
 	b.bg:SetAllPoints()
-	b.bg:SetColorTexture(0, 0, 0, 0.12)
-	b.edge = Edge(b, "OVERLAY", 0.75, 0.75, 0.8, 0.6, 1)
+	b.bg:SetColorTexture(0, 0, 0, 0)
+	-- 빈 칸 테두리: 예전 센터바와 같은 게임 기본 퀵슬롯 테두리를 옅게
+	local slotTex = b:CreateTexture(nil, "BORDER")
+	slotTex:SetTexture("Interface\\Buttons\\UI-Quickslot2")
+	slotTex:SetPoint("TOPLEFT", -14, 14)
+	slotTex:SetPoint("BOTTOMRIGHT", 15, -15)
+	slotTex:SetAlpha(0.45)
+	b.edge = { slotTex }
 
 	-- 아이콘: 칸을 꽉 채움
 	b.icon = b:CreateTexture(nil, "ARTWORK")
