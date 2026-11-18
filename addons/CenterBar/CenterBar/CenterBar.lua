@@ -357,12 +357,10 @@ local function UpdateButton(b)
 end
 
 local function UpdateFrame(b, cursor)
-	-- 테두리는 빈 칸에만 (기술이 들어 있으면 아이콘만 보임)
-	local show = not b.has and (db.grid or cursor)
-	if b.bg:IsShown() ~= (show and true or false) then
-		b.bg:SetShown(show)
-		for _, t in ipairs(b.edge) do t:SetShown(show) end
-	end
+	-- 테두리는 빈 칸에만 (기술이 들어 있으면 아이콘만 보임). 상태를 믿지 않고 매번 다시 맞춘다.
+	local show = (not b.has and (db.grid or cursor)) and true or false
+	b.bg:SetShown(show)
+	for _, t in ipairs(b.edge) do t:SetShown(show) end
 end
 
 local buttons = {}
