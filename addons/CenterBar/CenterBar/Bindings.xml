@@ -1,0 +1,20 @@
+<Bindings>
+  <Binding name="CLICK CenterBarButton1:LeftButton" header="CENTERBAR" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton2:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton3:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton4:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton5:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton6:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton7:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton8:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton9:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton10:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton11:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton12:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton13:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton14:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton15:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton16:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton17:LeftButton" category="ADDONS"/>
+  <Binding name="CLICK CenterBarButton18:LeftButton" category="ADDONS"/>
+</Bindings>

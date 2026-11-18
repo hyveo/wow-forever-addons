@@ -1,0 +1,16 @@
+## Interface: 16002, 16001
+## Title: hyveo 애드온 센터 (HyveoCenter)
+## Notes: hyveo가 만든 애드온(레벨페이스, 센터바)을 한 창에서 켜고 끄고 설정해요.
+## Notes-enUS: Manage hyveo's addons (LevelPace, CenterBar) in one window.
+## Author: hyveo
+## Version: @project-version@
+## IconTexture: Interface\AddOns\HyveoCenter\icon
+## AddonCompartmentFunc: HyveoCenter_OnAddonCompartmentClick
+## AddonCompartmentFuncOnEnter: HyveoCenter_OnAddonCompartmentEnter
+## AddonCompartmentFuncOnLeave: HyveoCenter_OnAddonCompartmentLeave
+## OptionalDeps: LevelPace, CenterBar
+## X-Category: Miscellaneous
+## X-Website: https://github.com/hyveo/wow-forever-addons
+## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
+
+HyveoCenter.lua

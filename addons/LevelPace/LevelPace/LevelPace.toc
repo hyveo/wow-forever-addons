@@ -1,0 +1,13 @@
+## Interface: 16002, 16001
+## Title: 레벨페이스 (LevelPace)
+## Notes: 시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미
+## Notes-enUS: Leveling helper: XP per hour and time to next level
+## SavedVariablesPerCharacter: LevelPaceDB
+## IconTexture: Interface\AddOns\LevelPace\icon
+## Author: hyveo
+## Version: @project-version@
+## X-Category: Quests & Leveling
+## X-Website: https://github.com/hyveo/wow-forever-addons
+## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
+
+LevelPace.lua

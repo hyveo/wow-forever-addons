@@ -1,0 +1,15 @@
+## Interface: 16002, 16001
+## Title: 센터바 (CenterBar)
+## Notes: 캐릭터 양옆에 액션 버튼을 최대 18개 놓아줍니다.
+## Notes-enUS: Up to 18 action buttons around your character.
+## Author: hyveo
+## Version: @project-version@
+## SavedVariablesPerCharacter: CenterBarDB
+## IconTexture: Interface\AddOns\CenterBar\icon
+## X-Category: Action Bars
+## X-License: All Rights Reserved
+## X-Website: https://github.com/hyveo/wow-forever-addons
+## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
+
+CenterBar.lua
+CenterBar_Options.lua
