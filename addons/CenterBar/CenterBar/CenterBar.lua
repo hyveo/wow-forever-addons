@@ -49,7 +49,9 @@ else
 end
 CenterBar_L = L
 
-local function Print(msg)
+local quiet = false -- 설정의 "채팅 메시지 숨김"
+local function Print(msg, always)
+	if quiet and not always then return end
 	print("|cffffd100" .. L.TITLE .. "|r: " .. msg)
 end
 
@@ -118,6 +120,7 @@ local DEFAULTS = {
 	mouseover  = false,      -- 마우스를 올리면 복구
 	vehiclehide = false,     -- 탈것(탑승 장비) 탑승 시 숨김
 	mounthide  = false,      -- 일반 탈것도 포함
+	quiet        = false,    -- 채팅창 안내 메시지 숨김
 	minimapHide  = false,    -- 미니맵 버튼 숨김
 	minimapAngle = 215,      -- 미니맵 둘레에서의 위치(도)
 	sets       = {},         -- [슬롯][버튼] = { t = "spell"/"item"/"macro", id = 번호, name = 매크로 이름 }
@@ -768,7 +771,9 @@ CenterBar = {
 			db[key] = value
 		end
 		if key == "preset" then db.px, db.py = nil, nil end
+		quiet = db.quiet and true or false
 		UpdateMinimap()
+		quiet = db.quiet and true or false
 		ApplyAll()
 	end,
 	GetSlot = function() return db and CurrentSlot() or 1 end,
@@ -797,6 +802,7 @@ CenterBar = {
 		wipe(db)
 		CopyDefaults(db, DEFAULTS)
 		db.sets, db.specSlot, db.imported = sets, specSlot, true
+		quiet = false
 		UpdateMinimap()
 		ApplyAll()
 		Print(L.RESET)
@@ -875,7 +881,7 @@ SlashCmdList.CENTERBAR = function(msg)
 	if msg == "" then
 		CenterBar.ToggleOptions()
 	elseif n and (msg == tostring(n) or msg:find("^slot") or msg:find("^슬롯")) then
-		if n >= 1 and n <= NUM_SLOTS then SetSlot(n) else Print(L.HELP) end
+		if n >= 1 and n <= NUM_SLOTS then SetSlot(n) else Print(L.HELP, true) end
 	elseif msg == "next" or msg == "다음" then
 		CenterBar.NextSlot()
 	elseif msg == "lock" or msg == "잠금" then
@@ -883,6 +889,6 @@ SlashCmdList.CENTERBAR = function(msg)
 	elseif msg == "reset" or msg == "초기화" then
 		CenterBar.Reset()
 	else
-		Print(L.HELP)
+		Print(L.HELP, true)
 	end
 end

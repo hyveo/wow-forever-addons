@@ -25,6 +25,7 @@ if GetLocale() == "koKR" then
 		GRID       = "빈 버튼 항상 표시",
 		LOCK       = "위치 잠금 (손잡이 숨김)",
 		NOMINIMAP  = "미니맵 버튼 숨김",
+		QUIET      = "채팅창 메시지 숨김",
 		RESET      = "처음으로",
 		CLOSE      = "닫기 (ESC)",
 		CENTER     = "CENTER",
@@ -55,6 +56,7 @@ else
 		GRID       = "Always show empty buttons",
 		LOCK       = "Lock position (hide handle)",
 		NOMINIMAP  = "Hide minimap button",
+		QUIET      = "Hide chat messages",
 		RESET      = "Reset",
 		CLOSE      = "Close (ESC)",
 		CENTER     = "CENTER",
@@ -64,7 +66,7 @@ else
 end
 
 local f = CreateFrame("Frame", "CenterBarOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(470, 520)
+f:SetSize(470, 560)
 f:SetPoint("LEFT", 40, 0)
 f:SetFrameStrata("DIALOG")
 f:SetClampedToScreen(true)
@@ -255,6 +257,7 @@ end
 Check(L2.GRID, "grid", -366)
 Check(L2.LOCK, "locked", -390)
 Check(L2.NOMINIMAP, "minimapHide", -414)
+Check(L2.QUIET, "quiet", -438)
 
 local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 tip1:SetPoint("BOTTOMLEFT", 18, 64)
@@ -282,15 +285,16 @@ close:SetScript("OnClick", function() f:Hide() end)
 local edit = CreateFrame("Frame", "CenterBarEditFrame", UIParent)
 edit:SetSize(10, 10)
 edit:SetFrameStrata("HIGH")
+edit:SetFrameLevel(5)
 edit:Hide()
 
 -- 화면 전체 격자: 화면(UIParent) 가장자리에서 가장자리까지 긋는다. 간격 = 이동간격 x 2.
-local gridFrame = CreateFrame("Frame", nil, edit)
+-- 예전 센터바와 똑같이: 화면(UIParent)에 바로 붙인 판에 선을 긋는다.
+local gridFrame = CreateFrame("Frame", "CenterBarGridFrame", UIParent)
 gridFrame:SetAllPoints(UIParent)
 gridFrame:SetFrameStrata("HIGH")
 gridFrame:SetFrameLevel(0)
-gridFrame:SetIgnoreParentScale(true)
-gridFrame:SetScale(UIParent:GetEffectiveScale())
+gridFrame:Hide()
 local LINES = 100
 local vlines, hlines = {}, {}
 for i = -LINES, LINES do
@@ -329,8 +333,7 @@ local function RefreshEdit()
 	edit:ClearAllPoints()
 	edit:SetPoint("CENTER", CenterBarFrame, "CENTER")
 	-- 선 굵기는 화면 픽셀 1칸 이상이 되게 (UI 배율이 작으면 1보다 얇은 선은 안 보인다)
-	gridFrame:SetScale(UIParent:GetEffectiveScale())
-	local es = gridFrame:GetEffectiveScale()
+	local es = UIParent:GetEffectiveScale()
 	local px = (es and es > 0 and es < 1) and (1 / es) or 1
 	for i = -LINES, LINES do
 		local c = i * step * 2
@@ -421,6 +424,8 @@ f:SetScript("OnShow", function()
 	Refresh()
 end)
 f:SetScript("OnHide", function() edit:Hide() end)
+edit:SetScript("OnShow", function() gridFrame:Show() end)
+edit:SetScript("OnHide", function() gridFrame:Hide() end)
 
 CenterBarOptions = {
 	Toggle = function() f:SetShown(not f:IsShown()) end,

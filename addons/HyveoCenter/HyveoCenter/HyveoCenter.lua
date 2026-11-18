@@ -497,6 +497,8 @@ SlashCmdList.HYVEOCENTER = function(msg)
 		Toggle()
 	elseif msg == "help" or msg == "도움말" or msg == "?" then
 		PrintHelp()
+	elseif msg == "minimap" or msg == "미니맵" then
+		HyveoCenter_ToggleMinimapButton()
 	else
 		local a, i = FindAddon(msg)
 		if not a then
@@ -548,10 +550,76 @@ local function RegisterSettingsPanel()
 	if ok and cat then pcall(Settings.RegisterAddOnCategory, cat) end
 end
 
+---------------------------------------------------------------------------
+-- 미니맵 버튼: 클릭 = 센터 열기, 드래그 = 미니맵 둘레를 따라 옮기기, /hv minimap = 보이기/숨기기
+---------------------------------------------------------------------------
+local KO = GetLocale() == "koKR"
+local mm = CreateFrame("Button", "HyveoCenterMinimapButton", Minimap)
+mm:SetSize(31, 31)
+mm:SetFrameStrata("MEDIUM")
+mm:SetFrameLevel(8)
+mm:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+mm:RegisterForDrag("LeftButton")
+mm:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+mm.bg = mm:CreateTexture(nil, "BACKGROUND")
+mm.bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+mm.bg:SetSize(20, 20)
+mm.bg:SetPoint("TOPLEFT", 7, -5)
+mm.icon = mm:CreateTexture(nil, "ARTWORK")
+mm.icon:SetTexture("Interface\\AddOns\\HyveoCenter\\icon")
+mm.icon:SetSize(18, 18)
+mm.icon:SetPoint("TOPLEFT", 7, -6)
+mm.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+mm.border = mm:CreateTexture(nil, "OVERLAY")
+mm.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+mm.border:SetSize(53, 53)
+mm.border:SetPoint("TOPLEFT")
+mm:Hide()
+
+local function UpdateMinimap()
+	local db = HyveoCenterDB
+	if not db then return end
+	mm:SetShown(not db.minimapHide)
+	local a = math.rad(db.minimapAngle or 190)
+	local r = (Minimap:GetWidth() or 140) / 2 + 5
+	mm:ClearAllPoints()
+	mm:SetPoint("CENTER", Minimap, "CENTER", math.cos(a) * r, math.sin(a) * r)
+end
+
+mm:SetScript("OnClick", function() Toggle() end)
+mm:SetScript("OnDragStart", function(self)
+	self:SetScript("OnUpdate", function()
+		local mx, my = Minimap:GetCenter()
+		local cx, cy = GetCursorPosition()
+		local s = Minimap:GetEffectiveScale()
+		if not mx or not s or s == 0 or not HyveoCenterDB then return end
+		HyveoCenterDB.minimapAngle = math.deg(math.atan2(cy / s - my, cx / s - mx))
+		UpdateMinimap()
+	end)
+end)
+mm:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
+mm:SetScript("OnEnter", function(self)
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+	GameTooltip:AddLine(L.TITLE)
+	GameTooltip:AddLine(KO and "클릭: 애드온 센터 열기" or "Click: open the addon center", 1, 1, 1)
+	GameTooltip:AddLine(KO and "드래그: 버튼 옮기기" or "Drag: move this button", 1, 1, 1)
+	GameTooltip:AddLine(KO and "/hv minimap: 이 버튼 숨기기" or "/hv minimap: hide this button", 0.6, 0.6, 0.6)
+	GameTooltip:Show()
+end)
+mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+function HyveoCenter_ToggleMinimapButton()
+	HyveoCenterDB = HyveoCenterDB or {}
+	HyveoCenterDB.minimapHide = not HyveoCenterDB.minimapHide
+	UpdateMinimap()
+end
+
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("ADDON_LOADED")
 ev:SetScript("OnEvent", function(_, _, name)
 	if name == ADDON_NAME then
+		HyveoCenterDB = HyveoCenterDB or {}
+		UpdateMinimap()
 		RegisterSettingsPanel()
 		ev:UnregisterEvent("ADDON_LOADED")
 	end
