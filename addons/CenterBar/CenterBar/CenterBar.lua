@@ -95,7 +95,7 @@ local COLUMNS = {
 }
 
 local DEFAULTS = {
-	version    = 3,
+	version    = 4,
 	point      = nil,        -- 저장 위치 (nil이면 화면 한가운데)
 	x          = 0,
 	y          = 0,
@@ -104,9 +104,14 @@ local DEFAULTS = {
 	preset     = 1,          -- PRESETS 번호
 	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
-	grid       = true,       -- 빈 칸도 테두리 보이기
+	grid       = false,      -- 빈 칸도 테두리 보이기 (끄면 빈 칸은 안 보임)
 	mirror     = true,       -- 격자에서 옮길 때 반대쪽 버튼도 같이
-	visibility = "always",   -- always / combat / mouseover
+	combat     = false,      -- 전투 중에는 투명도 복구(또렷하게)
+	target     = false,      -- 대상을 선택하면 복구
+	mouseover  = false,      -- 마우스를 올리면 복구
+	vehiclehide = false,     -- 탈것(탑승 장비) 탑승 시 숨김
+	mounthide  = false,      -- 일반 탈것도 포함
+	slotPages  = {},         -- [슬롯] = { main = 페이지, extra = 페이지 } (직접 바꾼 경우만)
 	locked     = true,
 	tooltips   = true,
 	specSlot   = {},         -- [특성 번호] = 슬롯 번호
@@ -133,6 +138,14 @@ local function Migrate()
 		db.specPages, db.extraPage, db.shape, db.gap, db.inner = nil, nil, nil, nil, nil
 		db.point, db.relPoint, db.x, db.y = nil, nil, 0, 0
 		db.version = 3
+	end
+	if (db.version or 1) < 4 then
+		-- 1.1.x: "보이기" 선택 → 예전 센터바처럼 투명도 + 복구 조건
+		if db.visibility == "combat" then db.combat = true db.alpha = 0
+		elseif db.visibility == "mouseover" then db.mouseover = true db.alpha = 0 end
+		db.visibility = nil
+		db.grid = false
+		db.version = 4
 	end
 	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 1 end
 end
@@ -161,11 +174,14 @@ local function ButtonOffset(i)
 end
 
 local function ButtonAction(i, slot)
-	local s = SLOTS[slot or CurrentSlot()]
+	slot = slot or CurrentSlot()
+	local s, o = SLOTS[slot], db.slotPages[slot]
+	local main = (o and o.main) or s.main
+	local extra = (o and o.extra) or s.extra
 	if i <= PAGE_SLOTS then
-		return (s.main - 1) * PAGE_SLOTS + i
+		return (main - 1) * PAGE_SLOTS + i
 	end
-	return (s.extra - 1) * PAGE_SLOTS + s.offset + (i - PAGE_SLOTS)
+	return (extra - 1) * PAGE_SLOTS + s.offset + (i - PAGE_SLOTS)
 end
 
 -- 표시 개수 6/12/18: 양쪽에서 캐릭터와 가까운 열부터 보인다
@@ -368,8 +384,8 @@ for i = 1, NUM_BUTTONS do
 	-- 칸 바탕 + 테두리(격자)
 	b.bg = b:CreateTexture(nil, "BACKGROUND")
 	b.bg:SetAllPoints()
-	b.bg:SetColorTexture(0, 0, 0, 0.35)
-	b.edge = Edge(b, "OVERLAY", 0.75, 0.75, 0.8, 0.9, 2)
+	b.bg:SetColorTexture(0, 0, 0, 0.12)
+	b.edge = Edge(b, "OVERLAY", 0.75, 0.75, 0.8, 0.6, 1)
 
 	-- 아이콘: 칸을 꽉 채움
 	b.icon = b:CreateTexture(nil, "ARTWORK")
@@ -449,11 +465,12 @@ end
 
 local function ApplyVisibility()
 	UnregisterStateDriver(bar, "visibility")
-	if db.visibility == "combat" then
-		RegisterStateDriver(bar, "visibility", "[petbattle][vehicleui] hide; [combat] show; hide")
-	else
-		RegisterStateDriver(bar, "visibility", "[petbattle][vehicleui] hide; show")
+	local cond = "[petbattle] hide; "
+	if db.vehiclehide then
+		cond = cond .. "[vehicleui][overridebar][possessbar] hide; "
+		if db.mounthide then cond = cond .. "[mounted] hide; " end
 	end
+	RegisterStateDriver(bar, "visibility", cond .. "show")
 end
 
 local function ApplyPosition()
@@ -493,13 +510,19 @@ bar:SetScript("OnUpdate", function(self, elapsed)
 			UpdateFrame(b, cursor)
 		end
 	end
+	-- 투명도: 평소에는 설정값, 복구 조건에 맞으면 또렷하게
 	local target = db.alpha or 1
-	if db.visibility == "mouseover" and db.locked then
-		local over = false
-		for _, b in ipairs(buttons) do
-			if b:IsShown() and b:IsMouseOver() then over = true break end
+	if target < 1 then
+		local full = cursor or not db.locked
+			or (CenterBarEditFrame and CenterBarEditFrame:IsShown())
+			or (db.combat and InCombatLockdown())
+			or (db.target and UnitExists("target"))
+		if not full and db.mouseover then
+			for _, b in ipairs(buttons) do
+				if b:IsShown() and b:IsMouseOver() then full = true break end
+			end
 		end
-		if not over and not cursor then target = FADE_ALPHA end
+		if full then target = 1 end
 	end
 	if math.abs(self:GetAlpha() - target) > 0.01 then self:SetAlpha(target) end
 end)
@@ -532,7 +555,13 @@ CenterBar = {
 	Get = function(key) return db and db[key] end,
 	Set = function(key, value)
 		if not db then return end
-		db[key] = value
+		if key == "visibility" then -- hyveo 애드온 센터(예전 방식) 호환
+			db.combat = (value == "combat")
+			db.mouseover = (value == "mouseover")
+			if value == "always" then db.alpha = 1 elseif (db.alpha or 1) >= 1 then db.alpha = 0 end
+		else
+			db[key] = value
+		end
 		if key == "preset" then db.px, db.py = nil, nil end
 		ApplyAll()
 	end,
@@ -540,6 +569,26 @@ CenterBar = {
 	SetSlot = SetSlot,
 	NextSlot = function() SetSlot(CurrentSlot() % NUM_SLOTS + 1) end,
 	GetSlotInfo = function(s) return SLOTS[s] end,
+	-- 지금 슬롯이 쓰는 액션바 페이지 (kind = "main" 버튼 1~12, "extra" 버튼 13~18)
+	GetSlotPage = function(kind)
+		if not db then return 1 end
+		local s = CurrentSlot()
+		local o = db.slotPages[s]
+		return (o and o[kind]) or SLOTS[s][kind]
+	end,
+	SetSlotPage = function(kind, page)
+		if not db then return end
+		local s = CurrentSlot()
+		db.slotPages[s] = db.slotPages[s] or {}
+		db.slotPages[s][kind] = page
+		ApplyAll()
+	end,
+	-- 바 전체를 조금씩 옮기기
+	Nudge = function(dx, dy)
+		if not db then return end
+		db.x, db.y = (db.x or 0) + dx, (db.y or 0) + dy
+		ApplyAll()
+	end,
 	NUM_PRESETS = #PRESETS,
 	NUM_BUTTONS = NUM_BUTTONS,
 	GetPos = function(i) if db and db.px then return db.px[i], db.py[i] end end,
@@ -564,8 +613,8 @@ CenterBar = {
 		ApplyAll()
 		Print(db.locked and L.LOCKED or L.UNLOCKED)
 	end,
-	IsCombatOnly = function() return db and db.visibility == "combat" end,
-	IsMouseoverOnly = function() return db and db.visibility == "mouseover" end,
+	IsCombatOnly = function() return db and db.combat and (db.alpha or 1) < 1 or false end,
+	IsMouseoverOnly = function() return db and db.mouseover and (db.alpha or 1) < 1 or false end,
 	ToggleOptions = function()
 		if CenterBarOptions and CenterBarOptions.Toggle then CenterBarOptions.Toggle() end
 	end,
