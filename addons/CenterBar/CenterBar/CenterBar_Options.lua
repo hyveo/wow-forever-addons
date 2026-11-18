@@ -13,14 +13,17 @@ if GetLocale() == "koKR" then
 		ALPHA      = "투명도",
 		GAP        = "버튼 간격",
 		INNER      = "캐릭터와 거리",
-		PAGE       = "버튼 1~12가 쓰는 액션바 페이지",
-		SPEC       = "특성 %d",
-		EXTRA      = "버튼 13~18 페이지 (1~6번 칸)",
+		SHAPE      = "모양",
+		SHAPE_ARC  = "둥글게",
+		SHAPE_GRID = "반듯하게",
+		SLOT       = "슬롯 (지금 특성)",
+		GRID       = "빈 칸도 테두리 보이기",
 		TOOLTIPS   = "버튼 툴팁 보이기",
 		LOCK       = "위치 잠금",
 		RESET      = "처음으로",
 		BINDINGS   = "단축키: 게임 메뉴 → 단축키 설정 → 애드온 → 센터바",
-		PAGE_TIP   = "다른 액션바에 보이는 페이지를 고르면 같은 기술이 두 곳에 보여요.",
+		SLOT_TIP   = "슬롯마다 넣은 기술이 따로 저장돼요. 슬롯 1 = 예전 센터바와 같은 칸",
+		SLOT_TIP2  = "슬롯 2·3은 기본 UI 액션바 6~8과 칸을 같이 써요. 단축키로도 바꿀 수 있어요.",
 	}
 else
 	L2 = {
@@ -34,19 +37,22 @@ else
 		ALPHA      = "Opacity",
 		GAP        = "Button gap",
 		INNER      = "Distance from character",
-		PAGE       = "Action bar page for buttons 1–12",
-		SPEC       = "Spec %d",
-		EXTRA      = "Page for buttons 13–18 (slots 1–6)",
+		SHAPE      = "Shape",
+		SHAPE_ARC  = "Round",
+		SHAPE_GRID = "Straight",
+		SLOT       = "Slot (this spec)",
+		GRID       = "Show borders on empty slots",
 		TOOLTIPS   = "Show button tooltips",
 		LOCK       = "Lock position",
 		RESET      = "Reset",
 		BINDINGS   = "Keybinds: Game Menu → Keybindings → AddOns → CenterBar",
-		PAGE_TIP   = "Picking a page another bar shows puts the same spells in two places.",
+		SLOT_TIP   = "Each slot keeps its own spells. Slot 1 = same as the old CentarBar",
+		SLOT_TIP2  = "Slots 2–3 share slots with default action bars 6–8. You can bind a key too.",
 	}
 end
 
 local f = CreateFrame("Frame", "CenterBarOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(420, 470)
+f:SetSize(420, 520)
 f:SetPoint("CENTER")
 f:SetFrameStrata("DIALOG")
 f:SetClampedToScreen(true)
@@ -76,7 +82,7 @@ local function Label(text, size)
 end
 
 -- 여러 값 중 하나 고르는 버튼 줄
-local function Choice(label, key, options)
+local function Choice(label, key, options, getter, setter)
 	Label(label)
 	local btns = {}
 	for i, opt in ipairs(options) do
@@ -86,13 +92,13 @@ local function Choice(label, key, options)
 		b:SetWidth(80)
 		b:SetText(opt.text)
 		b:SetScript("OnClick", function()
-			CenterBar.Set(key, opt.value)
+			if setter then setter(opt.value) else CenterBar.Set(key, opt.value) end
 			Refresh()
 		end)
 		btns[i] = b
 	end
 	refreshers[#refreshers + 1] = function()
-		local cur = CenterBar.Get(key)
+		local cur = getter and getter() or CenterBar.Get(key)
 		for i, opt in ipairs(options) do
 			btns[i]:SetEnabled(cur ~= opt.value)
 		end
@@ -149,6 +155,7 @@ local function Check(label, key)
 end
 
 Choice(L2.COUNT, "count", { { text = "6", value = 6 }, { text = "12", value = 12 }, { text = "18", value = 18 } })
+Choice(L2.SHAPE, "shape", { { text = L2.SHAPE_ARC, value = "arc" }, { text = L2.SHAPE_GRID, value = "grid" } })
 Choice(L2.VIS, "visibility", {
 	{ text = L2.VIS_ALWAYS, value = "always" },
 	{ text = L2.VIS_COMBAT, value = "combat" },
@@ -166,24 +173,16 @@ y = y - 30
 Stepper(L2.INNER, num("inner"), set("inner"), 5, 20, 300, "%d")
 y = y - 38
 
-Label(L2.PAGE)
+local slotOpts = {}
+for i = 1, CenterBar.NUM_SLOTS do slotOpts[i] = { text = CenterBar.L.SLOT:format(i), value = i } end
+Choice(L2.SLOT, "slot", slotOpts, CenterBar.GetSlot, CenterBar.SetSlot)
+y = y + 8
+Label(L2.SLOT_TIP, "GameFontDisableSmall")
+y = y - 16
+Label(L2.SLOT_TIP2, "GameFontDisableSmall")
 y = y - 26
-local numSpecs = (GetNumSpecializations and GetNumSpecializations()) or 2
-if numSpecs < 1 then numSpecs = 1 end
-for s = 1, math.min(numSpecs, 4) do
-	local col = (s - 1) % 2
-	if col == 0 and s > 1 then y = y - 30 end
-	Stepper(L2.SPEC:format(s),
-		function() return CenterBar.GetSpecPage(s) end,
-		function(v) CenterBar.SetSpecPage(s, v) end,
-		1, 1, 10, "%d", 20 + col * 200)
-end
-y = y - 30
-Stepper(L2.EXTRA, num("extraPage"), set("extraPage"), 1, 1, 10, "%d")
-y = y - 26
-Label(L2.PAGE_TIP, "GameFontDisableSmall")
-y = y - 24
 
+Check(L2.GRID, "grid")
 Check(L2.TOOLTIPS, "tooltips")
 Check(L2.LOCK, "locked")
 
@@ -201,4 +200,5 @@ f:SetScript("OnShow", Refresh)
 
 CenterBarOptions = {
 	Toggle = function() f:SetShown(not f:IsShown()) end,
+	Refresh = function() if f:IsShown() then Refresh() end end,
 }
