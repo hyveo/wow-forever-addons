@@ -291,14 +291,21 @@ edit:SetSize(10, 10)
 edit:SetFrameStrata("HIGH")
 edit:Hide()
 
-local LINES = 60
+-- 화면 전체 격자: 화면(UIParent) 가장자리에서 가장자리까지 긋는다. 간격 = 이동간격 x 2.
+local gridFrame = CreateFrame("Frame", nil, edit)
+gridFrame:SetAllPoints(UIParent)
+gridFrame:SetFrameStrata("HIGH")
+gridFrame:SetFrameLevel(0)
+gridFrame:SetIgnoreParentScale(true)
+gridFrame:SetScale(UIParent:GetEffectiveScale())
+local LINES = 100
 local vlines, hlines = {}, {}
 for i = -LINES, LINES do
-	local a = (i == 0) and 0.9 or (i % 5 == 0) and 0.55 or 0.28
+	local a = (i == 0) and 0.95 or (i % 5 == 0) and 0.6 or 0.3
 	local r = (i == 0) and 1 or 0
-	vlines[i] = edit:CreateTexture(nil, "BACKGROUND")
+	vlines[i] = gridFrame:CreateTexture(nil, "BACKGROUND")
 	vlines[i]:SetColorTexture(r, r, r, a)
-	hlines[i] = edit:CreateTexture(nil, "BACKGROUND")
+	hlines[i] = gridFrame:CreateTexture(nil, "BACKGROUND")
 	hlines[i]:SetColorTexture(r, r, r, a)
 end
 
@@ -328,15 +335,21 @@ local function RefreshEdit()
 	edit:SetScale(CenterBar.Get("scale") or 1)
 	edit:ClearAllPoints()
 	edit:SetPoint("CENTER", CenterBarFrame, "CENTER")
+	-- 선 굵기는 화면 픽셀 1칸 이상이 되게 (UI 배율이 작으면 1보다 얇은 선은 안 보인다)
+	gridFrame:SetScale(UIParent:GetEffectiveScale())
+	local es = gridFrame:GetEffectiveScale()
+	local px = (es and es > 0 and es < 1) and (1 / es) or 1
 	for i = -LINES, LINES do
 		local c = i * step * 2
-		local w = (i == 0) and 2 or 1
+		local w = (i == 0) and px * 2 or px
 		vlines[i]:ClearAllPoints()
-		vlines[i]:SetSize(w, 6000)
-		vlines[i]:SetPoint("CENTER", edit, "CENTER", c, 0)
+		vlines[i]:SetPoint("TOP", UIParent, "TOP", c, 0)
+		vlines[i]:SetPoint("BOTTOM", UIParent, "BOTTOM", c, 0)
+		vlines[i]:SetWidth(w)
 		hlines[i]:ClearAllPoints()
-		hlines[i]:SetSize(6000, w)
-		hlines[i]:SetPoint("CENTER", edit, "CENTER", 0, c)
+		hlines[i]:SetPoint("LEFT", UIParent, "LEFT", 0, c)
+		hlines[i]:SetPoint("RIGHT", UIParent, "RIGHT", 0, c)
+		hlines[i]:SetHeight(w)
 	end
 	for i, m in ipairs(markers) do
 		local x, y = CenterBar.GetPos(i)
