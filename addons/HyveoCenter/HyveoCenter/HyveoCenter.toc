@@ -4,6 +4,7 @@
 ## Notes-enUS: Manage hyveo's addons (LevelPace, CenterBar) in one window.
 ## Author: hyveo
 ## Version: @project-version@
+## SavedVariables: HyveoCenterDB
 ## IconTexture: Interface\AddOns\HyveoCenter\icon
 ## AddonCompartmentFunc: HyveoCenter_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: HyveoCenter_OnAddonCompartmentEnter
