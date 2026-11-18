@@ -173,7 +173,7 @@ local ADDONS = {
 		extra  = {},
 		name   = L.CB_NAME,
 		desc   = L.CB_DESC,
-		cmd    = "/센터바",
+		cmd    = "/cb",
 		icon   = "Interface\\AddOns\\CenterBar\\icon",
 		open   = function()
 			if CenterBar and CenterBar.ToggleOptions then CenterBar.ToggleOptions()
