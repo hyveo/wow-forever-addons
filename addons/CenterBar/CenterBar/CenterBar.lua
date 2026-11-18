@@ -104,13 +104,13 @@ local COLUMNS = {
 }
 
 local DEFAULTS = {
-	version    = 5,
+	version    = 6,
 	point      = nil,        -- 저장 위치 (nil이면 화면 한가운데)
 	x          = 0,
 	y          = 0,
 	scale      = 1.0,
 	alpha      = 1.0,
-	preset     = 2,          -- PRESETS 번호 (2 = 곡선)
+	preset     = 1,          -- PRESETS 번호 (1 = 세로 3줄)
 	step       = 10,         -- 칸 좌표 1의 거리 (클수록 넓게 퍼짐)
 	count      = 18,         -- 6 / 12 / 18
 	grid       = false,      -- 빈 칸도 테두리 보이기 (끄면 빈 칸은 안 보임)
@@ -160,12 +160,12 @@ local function Migrate()
 		db.grid = false
 		db.version = 4
 	end
-	if (db.version or 1) < 5 then
-		-- 기본 배치를 곡선으로: 아직 "세로 3줄" 그대로 쓰고 있으면 곡선으로 바꾼다 (직접 옮긴 배치는 그대로)
-		if db.preset == 1 then db.preset = 2 db.px, db.py = nil, nil end
-		db.version = 5
+	if (db.version or 1) < 6 then
+		-- 1.3.3이 기본 배치를 곡선으로 바꿨던 것을 되돌린다 (그 버전을 거친 경우만)
+		if db.version == 5 and db.preset == 2 then db.preset = 1 db.px, db.py = nil, nil end
+		db.version = 6
 	end
-	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 2 end
+	if db.preset ~= 0 and not PRESETS[db.preset] then db.preset = 1 end
 end
 
 -- 버튼 자리(db.px, db.py)가 없으면 고른 배치에서 복사한다. 격자에서 직접 옮기면 preset = 0(직접 배치).
