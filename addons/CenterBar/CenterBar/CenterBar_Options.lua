@@ -24,6 +24,7 @@ if GetLocale() == "koKR" then
 		MOUNT      = "  - 일반 탈것 포함",
 		GRID       = "빈 버튼 항상 표시",
 		LOCK       = "위치 잠금 (손잡이 숨김)",
+		NOMINIMAP  = "미니맵 버튼 숨김",
 		RESET      = "처음으로",
 		CLOSE      = "닫기 (ESC)",
 		CENTER     = "CENTER",
@@ -53,6 +54,7 @@ else
 		MOUNT      = "  - also when mounted",
 		GRID       = "Always show empty buttons",
 		LOCK       = "Lock position (hide handle)",
+		NOMINIMAP  = "Hide minimap button",
 		RESET      = "Reset",
 		CLOSE      = "Close (ESC)",
 		CENTER     = "CENTER",
@@ -252,6 +254,7 @@ refreshers[#refreshers + 1] = function()
 end
 Check(L2.GRID, "grid", -366)
 Check(L2.LOCK, "locked", -390)
+Check(L2.NOMINIMAP, "minimapHide", -414)
 
 local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
 tip1:SetPoint("BOTTOMLEFT", 18, 64)

@@ -19,6 +19,9 @@ if GetLocale() == "koKR" then
 		LOCKED      = "센터바를 잠갔어요.",
 		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
 		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
+		MM_LEFT     = "왼쪽 클릭: 설정 창",
+		MM_RIGHT    = "오른쪽 클릭: 다음 슬롯",
+		MM_DRAG     = "드래그: 버튼 옮기기",
 		CANT_PLACE  = "여기에는 주문, 아이템, 매크로만 넣을 수 있어요.",
 		RESET       = "센터바 위치와 설정을 처음으로 되돌렸어요. (버튼에 넣은 기술은 그대로예요)",
 		HELP        = "/cb — 설정 창  |  /cb 1 ~ /cb 5 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
@@ -35,6 +38,9 @@ else
 		LOCKED      = "CenterBar locked.",
 		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
 		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
+		MM_LEFT     = "Left-click: options",
+		MM_RIGHT    = "Right-click: next slot",
+		MM_DRAG     = "Drag: move this button",
 		CANT_PLACE  = "Only spells, items and macros can go here.",
 		RESET       = "CenterBar position and settings reset. (Your spells stay on the buttons)",
 		HELP        = "/cb — options  |  /cb 1 … /cb 5 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
@@ -112,6 +118,8 @@ local DEFAULTS = {
 	mouseover  = false,      -- 마우스를 올리면 복구
 	vehiclehide = false,     -- 탈것(탑승 장비) 탑승 시 숨김
 	mounthide  = false,      -- 일반 탈것도 포함
+	minimapHide  = false,    -- 미니맵 버튼 숨김
+	minimapAngle = 215,      -- 미니맵 둘레에서의 위치(도)
 	sets       = {},         -- [슬롯][버튼] = { t = "spell"/"item"/"macro", id = 번호, name = 매크로 이름 }
 	imported   = false,      -- 예전 버전 기술 가져오기를 끝냈는지
 	locked     = true,
@@ -681,6 +689,61 @@ end
 watch:SetScript("OnEvent", UpdateAllButtons)
 
 ---------------------------------------------------------------------------
+-- 미니맵 버튼: 왼쪽 클릭 = 설정 창, 오른쪽 클릭 = 다음 슬롯, 드래그 = 둘레를 따라 옮기기
+---------------------------------------------------------------------------
+local mm = CreateFrame("Button", "CenterBarMinimapButton", Minimap)
+mm:SetSize(31, 31)
+mm:SetFrameStrata("MEDIUM")
+mm:SetFrameLevel(8)
+mm:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+mm:RegisterForDrag("LeftButton")
+mm:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+mm.bg = mm:CreateTexture(nil, "BACKGROUND")
+mm.bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+mm.bg:SetSize(20, 20)
+mm.bg:SetPoint("TOPLEFT", 7, -5)
+mm.icon = mm:CreateTexture(nil, "ARTWORK")
+mm.icon:SetTexture("Interface\\AddOns\\CenterBar\\icon")
+mm.icon:SetSize(18, 18)
+mm.icon:SetPoint("TOPLEFT", 7, -6)
+mm.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+mm.border = mm:CreateTexture(nil, "OVERLAY")
+mm.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+mm.border:SetSize(53, 53)
+mm.border:SetPoint("TOPLEFT")
+
+local function UpdateMinimap()
+	if not db then return end
+	mm:SetShown(not db.minimapHide)
+	local a = math.rad(db.minimapAngle or 215)
+	local r = (Minimap:GetWidth() or 140) / 2 + 5
+	mm:ClearAllPoints()
+	mm:SetPoint("CENTER", Minimap, "CENTER", math.cos(a) * r, math.sin(a) * r)
+end
+
+mm:SetScript("OnDragStart", function(self)
+	self:SetScript("OnUpdate", function()
+		local mx, my = Minimap:GetCenter()
+		local cx, cy = GetCursorPosition()
+		local s = Minimap:GetEffectiveScale()
+		if not mx or not s or s == 0 then return end
+		db.minimapAngle = math.deg(math.atan2(cy / s - my, cx / s - mx))
+		UpdateMinimap()
+	end)
+end)
+mm:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
+mm:SetScript("OnEnter", function(self)
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+	GameTooltip:AddLine(L.TITLE)
+	GameTooltip:AddLine(L.MM_LEFT, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_RIGHT, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_DRAG, 1, 1, 1)
+	GameTooltip:Show()
+end)
+mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
+mm:Hide()
+
+---------------------------------------------------------------------------
 -- 공개 API (설정 창, hyveo 애드온 센터에서 사용)
 ---------------------------------------------------------------------------
 local function SetSlot(s)
@@ -705,6 +768,7 @@ CenterBar = {
 			db[key] = value
 		end
 		if key == "preset" then db.px, db.py = nil, nil end
+		UpdateMinimap()
 		ApplyAll()
 	end,
 	GetSlot = function() return db and CurrentSlot() or 1 end,
@@ -733,6 +797,7 @@ CenterBar = {
 		wipe(db)
 		CopyDefaults(db, DEFAULTS)
 		db.sets, db.specSlot, db.imported = sets, specSlot, true
+		UpdateMinimap()
 		ApplyAll()
 		Print(L.RESET)
 	end,
@@ -748,6 +813,10 @@ CenterBar = {
 		if CenterBarOptions and CenterBarOptions.Toggle then CenterBarOptions.Toggle() end
 	end,
 }
+
+mm:SetScript("OnClick", function(_, button)
+	if button == "RightButton" then CenterBar.NextSlot() else CenterBar.ToggleOptions() end
+end)
 
 ---------------------------------------------------------------------------
 -- 이벤트
@@ -771,6 +840,7 @@ ev:SetScript("OnEvent", function(_, event, arg1)
 		Migrate()
 		EnsurePositions()
 	elseif event == "PLAYER_LOGIN" then
+		UpdateMinimap()
 		ApplyAll()
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		-- 액션바 정보는 이때부터 읽을 수 있다
