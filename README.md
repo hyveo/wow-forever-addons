@@ -7,6 +7,12 @@
 World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니다.
 애드온 하나가 `addons/` 아래 폴더 하나이고, 버전과 배포는 애드온별로 따로 관리합니다.
 
+## 만든 이유
+
+와우 포에버를 하는 남편을 위해 만들기 시작한 애드온이에요.
+저는 게임을 하지 않지만, 남편이 "이런 게 있으면 좋겠다"고 할 때마다 하나씩 만들다 보니 모음이 됐어요.
+같은 불편을 겪는 분들도 편하게 쓰셨으면 해서 공개합니다.
+
 ## 애드온 목록
 
 | 애드온 | 설명 | 최신 버전 |
@@ -86,6 +92,12 @@ All Rights Reserved. 게임에서 쓰는 것과 버그 제보·수정 제안은 
 
 A collection of addons for World of Warcraft: Forever.
 Each addon is one folder under `addons/`, and each one is versioned and released separately.
+
+## Why
+
+These addons started as things I made for my husband, who plays WoW Forever.
+I don't play myself, but every time he said "I wish there were an addon for this," I made one, and they grew into a collection.
+I'm sharing them in case they help you too.
 
 ## Addons
 
