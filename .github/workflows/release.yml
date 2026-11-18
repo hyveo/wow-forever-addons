@@ -55,3 +55,38 @@ jobs:
               --title "${{ steps.meta.outputs.addon }} ${{ steps.meta.outputs.version }}" \
               --notes-file notes.md
           fi
+
+      # CurseForge에도 같은 zip을 올린다. 실패해도 GitHub Release는 그대로 둔다.
+      # 저장소 Secrets의 CF_API_KEY(CurseForge API 토큰)가 필요하다.
+      - name: CurseForge 업로드
+        continue-on-error: true
+        env:
+          CF_API_KEY: ${{ secrets.CF_API_KEY }}
+        run: |
+          A="${{ steps.meta.outputs.addon }}"; V="${{ steps.meta.outputs.version }}"
+          ZIP="${{ steps.pkg.outputs.zip }}"
+          case "$A" in
+            LevelPace)   PID=1814884 ;;
+            CenterBar)   PID=1814948 ;;
+            HyveoCenter) PID=1814965 ;;
+            *) echo "CurseForge 프로젝트 번호를 모르는 애드온: $A"; exit 0 ;;
+          esac
+          if [ -z "$CF_API_KEY" ]; then echo "CF_API_KEY가 없어 건너뜀"; exit 0; fi
+          # 게임 버전 번호 찾기 (WoW Forever 1.60.x)
+          curl -sS -H "X-Api-Token: $CF_API_KEY" https://wow.curseforge.com/api/game/versions -o versions.json
+          GV=$(jq -c '[.[] | select(.name=="1.60.1") | .id]' versions.json)
+          if [ "$GV" = "[]" ] || [ -z "$GV" ]; then
+            GV=$(jq -c '[.[] | select(.name|test("Forever";"i")) | .id] | .[-1:]' versions.json)
+          fi
+          if [ "$GV" = "[]" ] || [ -z "$GV" ]; then
+            echo "CurseForge 게임 버전을 찾지 못함. 후보:"; jq -r '.[] | select(.name|test("^1\\.6|Forever";"i")) | "\(.id) \(.name)"' versions.json
+            exit 1
+          fi
+          echo "게임 버전 ID: $GV"
+          jq -n --rawfile cl notes.md --arg name "$A $V" --argjson gv "$GV" \
+            '{changelog:$cl, changelogType:"markdown", displayName:$name, gameVersions:$gv, releaseType:"release"}' > meta.json
+          CODE=$(curl -sS -o cf.out -w '%{http_code}' -H "X-Api-Token: $CF_API_KEY" \
+            -F "metadata=<meta.json" -F "file=@$ZIP" \
+            "https://wow.curseforge.com/api/projects/$PID/upload-file")
+          echo "HTTP $CODE"; cat cf.out; echo
+          [ "$CODE" = "200" ]
