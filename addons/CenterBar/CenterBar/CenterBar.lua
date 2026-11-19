@@ -279,6 +279,8 @@ local DRAG_START = [[
 ]]
 local function NoOp() end
 
+local ShowSpellTooltip
+
 local function ShortKey(key)
 	if not key then return "" end
 	local text = (GetBindingText and GetBindingText(key, 1)) or key
@@ -431,6 +433,29 @@ local function ApplyContent(b, c)
 	b:SetAttribute("macro", macro)
 end
 
+-- 주문 툴팁: 스킬북에서 볼 때와 같은 내용(배운 스킬 레벨 포함)이 나오도록 스킬북 칸으로 먼저 띄운다.
+-- 스킬북에서 못 찾으면 주문 번호로 띄운다.
+ShowSpellTooltip = function(c)
+	local tip = GameTooltip
+	local find = C_SpellBook and C_SpellBook.FindSpellBookSlotForSpell
+	if find and tip.SetSpellBookItem then
+		for _, id in ipairs({ c.sid or false, c.id or false }) do
+			if id then
+				local ok, slot, bank = pcall(find, id)
+				if ok and slot and pcall(tip.SetSpellBookItem, tip, slot, bank) and (tip:NumLines() or 0) > 0 then
+					return
+				end
+			end
+		end
+	end
+	local id = c.sid or c.id
+	if C_Spell.GetOverrideSpell then
+		local ok, ov = pcall(C_Spell.GetOverrideSpell, c.id)
+		if ok and ov and not isSecret(ov) and ov ~= 0 then id = c.sid or ov end
+	end
+	pcall(tip.SetSpellByID, tip, id)
+end -- ShowSpellTooltip
+
 local buttons = {}
 
 -- 커서에 들고 있는 기술/아이템/매크로를 i번 버튼에 넣는다
@@ -440,7 +465,8 @@ local function ReceiveCursor(i)
 	local c
 	if kind == "spell" then
 		local id = a4 or a3
-		if id then c = { t = "spell", id = id } end
+		-- id = 기본 주문 번호(시전·아이콘용), sid = 지금 배운 그대로의 주문 번호(툴팁용)
+		if id then c = { t = "spell", id = id, sid = a3 } end
 	elseif kind == "item" then
 		if a1 then c = { t = "item", id = a1 } end
 	elseif kind == "macro" then
@@ -527,7 +553,7 @@ for i = 1, NUM_BUTTONS do
 		if db and db.tooltips and c then
 			if GameTooltip_SetDefaultAnchor then GameTooltip_SetDefaultAnchor(GameTooltip, self)
 			else GameTooltip:SetOwner(self, "ANCHOR_RIGHT") end
-			if c.t == "spell" then pcall(GameTooltip.SetSpellByID, GameTooltip, c.id)
+			if c.t == "spell" then ShowSpellTooltip(c)
 			elseif c.t == "item" then pcall(GameTooltip.SetItemByID, GameTooltip, c.id)
 			else GameTooltip:SetText(c.name or "") end
 			GameTooltip:Show()
