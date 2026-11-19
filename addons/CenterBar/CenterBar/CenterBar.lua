@@ -437,23 +437,42 @@ end
 -- 스킬북에서 못 찾으면 주문 번호로 띄운다.
 ShowSpellTooltip = function(c)
 	local tip = GameTooltip
+	local shown = false
 	local find = C_SpellBook and C_SpellBook.FindSpellBookSlotForSpell
 	if find and tip.SetSpellBookItem then
 		for _, id in ipairs({ c.sid or false, c.id or false }) do
-			if id then
+			if id and not shown then
 				local ok, slot, bank = pcall(find, id)
 				if ok and slot and pcall(tip.SetSpellBookItem, tip, slot, bank) and (tip:NumLines() or 0) > 0 then
-					return
+					shown = true
 				end
 			end
 		end
 	end
-	local id = c.sid or c.id
+	local override
 	if C_Spell.GetOverrideSpell then
 		local ok, ov = pcall(C_Spell.GetOverrideSpell, c.id)
-		if ok and ov and not isSecret(ov) and ov ~= 0 then id = c.sid or ov end
+		if ok and ov and not isSecret(ov) and ov ~= 0 then override = ov end
 	end
-	pcall(tip.SetSpellByID, tip, id)
+	if not shown then pcall(tip.SetSpellByID, tip, c.sid or override or c.id) end
+
+	-- 기본 액션바 툴팁처럼 이름 줄 오른쪽에 스킬 레벨("2 레벨")을 넣는다. 이미 있으면 그대로 둔다.
+	local right = _G["GameTooltipTextRight1"]
+	if not right or not C_Spell.GetSpellSubtext then return end
+	local cur = right:IsShown() and right:GetText()
+	if cur and cur ~= "" then return end
+	for _, id in ipairs({ c.sid or false, override or false, c.id or false }) do
+		if id then
+			local ok, sub = pcall(C_Spell.GetSpellSubtext, id)
+			if ok and sub and not isSecret(sub) and sub ~= "" then
+				right:SetText(sub)
+				right:SetTextColor(0.5, 0.5, 0.5)
+				right:Show()
+				tip:Show() -- 줄 너비 다시 계산
+				return
+			end
+		end
+	end
 end -- ShowSpellTooltip
 
 local buttons = {}
