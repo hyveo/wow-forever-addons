@@ -35,7 +35,7 @@ local function Build()
 	f.title:SetText(L2.TITLE)
 
 	local LEFT, RIGHT = 20, 250
-	local checkLabels = {} -- 창 너비를 정할 때 가장 긴 체크박스 문구를 잰다
+	local checks = {} -- 세부 옵션 체크박스 (긴 문구는 줄바꿈하고 아래 칸을 그만큼 내린다)
 
 	local function Header(text, x, y)
 		local fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -96,7 +96,7 @@ local function Build()
 		fs:SetPoint("LEFT", c, "RIGHT", 2, 1)
 		fs:SetText(label)
 		c.label = fs
-		checkLabels[#checkLabels + 1] = fs
+		checks[#checks + 1] = c
 		c:SetScript("OnClick", function(self)
 			local v = self:GetChecked() and true or false
 			if invert then v = not v end
@@ -290,11 +290,23 @@ local function Build()
 	Check(L2.NOMINIMAP, "minimapHide", -414)
 	Check(L2.QUIET, "quiet", -438)
 
-	-- 문구가 긴 언어(독일어 등)는 체크박스 글자가 창 밖으로 나가지 않게 창을 넓힌다
-	local maxLabel = 0
-	for _, fs in ipairs(checkLabels) do maxLabel = math.max(maxLabel, fs:GetStringWidth() or 0) end
-	local W = math.max(470, math.ceil(RIGHT + 24 + maxLabel + 24))
-	f:SetWidth(W)
+	-- 문구가 긴 언어(독일어 등)는 체크박스 글자를 줄바꿈하고, 그만큼 다음 칸을 아래로 내린다.
+	-- 창 너비는 그대로 두고, 모자라면 창 높이만 늘린다.
+	local W = 470
+	local LABEL_W = W - (RIGHT - 4 + 26) - 18
+	local y = -198
+	for _, c in ipairs(checks) do
+		c:ClearAllPoints()
+		c:SetPoint("TOPLEFT", RIGHT - 4, y)
+		c.label:ClearAllPoints()
+		c.label:SetPoint("TOPLEFT", c, "TOPRIGHT", 2, -6)
+		c.label:SetWidth(LABEL_W)
+		c.label:SetJustifyH("LEFT")
+		c.label:SetWordWrap(true)
+		local h = c.label:GetStringHeight() or 12
+		y = y - math.max(24, math.ceil(h) + 12)
+	end
+	f:SetHeight(math.max(595, -y + 130))
 
 	-- 도움말 두 줄: 아래 것부터 놓고 위 것을 그 위에 붙여서, 줄이 넘어가도 겹치지 않게 한다
 	local tip2 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
