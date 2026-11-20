@@ -9,10 +9,12 @@ on:
     paths:
       - "addons/**"
       - "scripts/**"
+      - ".github/workflows/build.yml"
   pull_request:
     paths:
       - "addons/**"
       - "scripts/**"
+      - ".github/workflows/build.yml"
   workflow_dispatch:
 
 permissions:
