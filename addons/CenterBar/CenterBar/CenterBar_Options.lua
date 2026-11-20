@@ -4,7 +4,7 @@ local _, ns = ...
 local L2 = ns.L2 -- 문자열은 Locales.lua
 
 local f = CreateFrame("Frame", "CenterBarOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(470, 560)
+f:SetSize(470, 595)
 f:SetPoint("LEFT", 40, 0)
 f:SetFrameStrata("DIALOG")
 f:SetClampedToScreen(true)
@@ -35,6 +35,7 @@ local function Build()
 	f.title:SetText(L2.TITLE)
 
 	local LEFT, RIGHT = 20, 250
+	local checks = {} -- 세부 옵션 체크박스 (긴 문구는 줄바꿈하고 아래 칸을 그만큼 내린다)
 
 	local function Header(text, x, y)
 		local fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -95,6 +96,7 @@ local function Build()
 		fs:SetPoint("LEFT", c, "RIGHT", 2, 1)
 		fs:SetText(label)
 		c.label = fs
+		checks[#checks + 1] = c
 		c:SetScript("OnClick", function(self)
 			local v = self:GetChecked() and true or false
 			if invert then v = not v end
@@ -288,25 +290,47 @@ local function Build()
 	Check(L2.NOMINIMAP, "minimapHide", -414)
 	Check(L2.QUIET, "quiet", -438)
 
-	local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	tip1:SetPoint("BOTTOMLEFT", 18, 64)
-	tip1:SetWidth(434) tip1:SetJustifyH("LEFT")
-	tip1:SetText(L2.TIP1)
-	local tip2 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	tip2:SetPoint("BOTTOMLEFT", 18, 40)
-	tip2:SetWidth(434) tip2:SetJustifyH("LEFT")
-	tip2:SetText(L2.TIP2)
+	-- 문구가 긴 언어(독일어 등)는 체크박스 글자를 줄바꿈하고, 그만큼 다음 칸을 아래로 내린다.
+	-- 창 너비는 그대로 두고, 모자라면 창 높이만 늘린다.
+	local W = 470
+	local LABEL_W = W - (RIGHT - 4 + 26) - 18
+	local y = -198
+	for _, c in ipairs(checks) do
+		c:ClearAllPoints()
+		c:SetPoint("TOPLEFT", RIGHT - 4, y)
+		c.label:ClearAllPoints()
+		c.label:SetPoint("TOPLEFT", c, "TOPRIGHT", 2, -6)
+		c.label:SetWidth(LABEL_W)
+		c.label:SetJustifyH("LEFT")
+		c.label:SetWordWrap(true)
+		local h = c.label:GetStringHeight() or 12
+		y = y - math.max(24, math.ceil(h) + 12)
+	end
+	f:SetHeight(math.max(595, -y + 130))
 
+	-- 도움말 두 줄: 아래 것부터 놓고 위 것을 그 위에 붙여서, 줄이 넘어가도 겹치지 않게 한다
+	local tip2 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	tip2:SetPoint("BOTTOMLEFT", 18, 58) -- 아래 버튼(높이 26, 바닥에서 14)과 넉넉히 띄움
+	tip2:SetWidth(W - 36) tip2:SetJustifyH("LEFT")
+	tip2:SetText(L2.TIP2)
+	local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	tip1:SetPoint("BOTTOMLEFT", tip2, "TOPLEFT", 0, 4)
+	tip1:SetWidth(W - 36) tip1:SetJustifyH("LEFT")
+	tip1:SetText(L2.TIP1)
+
+	-- 아래 버튼 두 개: 글자 길이에 맞춰 넓히되 최소 130, 높이 26, 사이 20
 	local reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	reset:SetSize(100, 24)
-	reset:SetPoint("BOTTOM", -56, 12)
 	reset:SetText(L2.RESET)
 	reset:SetScript("OnClick", function() CenterBar.Reset(); Refresh() end)
 	local close = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	close:SetSize(100, 24)
-	close:SetPoint("BOTTOM", 56, 12)
 	close:SetText(L2.CLOSE)
 	close:SetScript("OnClick", function() f:Hide() end)
+	local function TextW(b) local fs = b:GetFontString() return fs and fs:GetStringWidth() or 0 end
+	local BW = math.max(130, math.ceil(math.max(TextW(reset), TextW(close)) + 36))
+	reset:SetSize(BW, 26)
+	close:SetSize(BW, 26)
+	reset:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -10, 14)
+	close:SetPoint("BOTTOMLEFT", f, "BOTTOM", 10, 14)
 
 	---------------------------------------------------------------------------
 	-- 위치 편집: 설정 창이 열려 있는 동안 화면 전체 격자 + 끌어 옮기는 번호 칸
