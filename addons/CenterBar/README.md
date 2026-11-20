@@ -26,6 +26,7 @@
 - 버튼 툴팁 끄기
 - 단축키 지정 (게임 메뉴 → 단축키 설정 → 애드온 → 센터바)
 - 재사용 대기시간·충전 횟수·사용 가능 여부는 게임 기본 액션 버튼과 같은 방식으로 표시
+- 언어: 한국어, English, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文 — 설정 창에서 고르거나 "자동"으로 게임 언어를 따라가요
 
 ## 명령어
 
@@ -43,6 +44,12 @@
 - 액션바 잠금을 켜 두면 버튼에서 기술을 빼낼 때 Shift를 누른 채 끌어 주세요.
 - 전투 중에 바꾼 설정은 전투가 끝나면 적용돼요 (게임 보안 규칙).
 - 예전 "중앙버튼" 계열 애드온과 함께 켜면 버튼이 겹치고 `/cb` 명령어도 겹치니 하나만 켜 주세요.
+
+## 번역
+
+번역이 어색하거나 틀린 곳이 있으면 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. 문구는 `CenterBar/Locales.lua` 한 파일에 모여 있어요.
+
+Spotted an awkward or wrong translation? Please open a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). All strings live in `CenterBar/Locales.lua`.
 
 ## 문제가 생기면
 
