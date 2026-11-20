@@ -6,13 +6,13 @@ Each version lists English first, then Korean. 버전마다 영어를 먼저, �
 
 **English**
 
-- Now in 9 languages: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- Now in 10 languages: English, 한국어, Deutsch, Español (América Latina), Español (España), Français, Português, Русский, 简体中文, 繁體中文
 - Uses the language chosen in hyveo Addon Center; without the center it follows your game language
 - Text without a translation is shown in English
 
 **한국어**
 
-- 9개 언어 지원: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- 10개 언어 지원: English, 한국어, Deutsch, Español (América Latina), Español (España), Français, Português, Русский, 简体中文, 繁體中文
 - hyveo 애드온 센터에서 고른 언어를 따라가요. 센터가 없으면 게임 언어로 나와요
 - 번역이 없는 문구는 영어로 보여요
 
