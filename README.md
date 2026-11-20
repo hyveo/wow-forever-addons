@@ -15,11 +15,13 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 
 ## 애드온 목록
 
-| 애드온 | 설명 | 최신 버전 |
+| 애드온 | 설명 | 받는 곳 |
 |---|---|---|
-| [레벨페이스 (LevelPace)](addons/LevelPace) | 시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미 | [Releases](../../releases) |
-| [센터바 (CenterBar)](addons/CenterBar) | 캐릭터 양옆에 액션 버튼을 최대 18개 배치 | [Releases](../../releases) |
-| [hyveo 애드온 센터 (HyveoCenter)](addons/HyveoCenter) | 위 애드온들을 게임 안에서 한 창으로 켜고 끄고 설정 | [Releases](../../releases) |
+| [레벨페이스 (LevelPace)](addons/LevelPace) | 시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미 | [CurseForge](https://www.curseforge.com/wow/addons/levelpace) · [zip](../../releases) |
+| [센터바 (CenterBar)](addons/CenterBar) | 캐릭터 양옆에 액션 버튼을 최대 18개 배치 | [CurseForge](https://www.curseforge.com/wow/addons/centerbar) · [zip](../../releases) |
+| [hyveo 애드온 센터 (HyveoCenter)](addons/HyveoCenter) | 위 애드온들을 게임 안에서 한 창으로 켜고 끄고 설정 | [CurseForge](https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo) · [zip](../../releases) |
+
+세 애드온 모두 **CurseForge에서 받을 수 있어요.** 애드온 소개와 예시 화면은 [hyveo.github.io/addons](https://hyveo.github.io/addons/)에도 있습니다.
 
 ## 애드온 요청 받습니다
 
@@ -36,10 +38,20 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 
 ## 설치
 
+### 방법 1. CurseForge 앱 (추천)
+
+1. [CurseForge 앱](https://www.curseforge.com/download/app)에서 World of Warcraft를 고르고, 게임 버전을 **WoW Forever**로 맞춥니다.
+2. `레벨페이스`, `센터바`, `hyveo`로 검색하거나 위 표의 CurseForge 링크를 엽니다.
+3. **Install**을 누릅니다. 업데이트도 앱이 알려 줍니다.
+
+### 방법 2. zip을 받아 직접 넣기
+
 1. [Releases](../../releases)에서 원하는 애드온의 zip을 받습니다.
 2. 압축을 풀어 나온 폴더를 `World of Warcraft\_forever_\Interface\AddOns\` 에 넣습니다.
    이전 버전이 있으면 해당 폴더를 지우고 새로 넣으세요.
 3. 게임을 완전히 재시작합니다 (`/reload`로는 TOC가 다시 읽히지 않습니다).
+
+어느 방법으로 바꿔 설치해도 설정은 그대로 남습니다. 설정은 애드온 폴더가 아니라 `WTF` 폴더에 저장됩니다.
 
 ## 레포 구조
 
@@ -63,14 +75,9 @@ scripts/bump-interface.sh 16003
 
 **새 버전 배포**
 
-태그 이름은 `<애드온폴더명>-v<버전>` 입니다.
-
-```bash
-git tag LevelPace-v1.0.1
-git push origin LevelPace-v1.0.1
-```
-
-GitHub Actions가 해당 애드온만 zip으로 묶고, TOC의 `@project-version@`을 버전으로 바꿔 Release에 올립니다.
+GitHub에서 릴리즈를 만들면 됩니다. 태그 이름은 `<애드온폴더명>-v<버전>` (예: `LevelPace-v1.0.3`)입니다.
+GitHub Actions가 해당 애드온만 zip으로 묶고, TOC의 `@project-version@`을 버전으로 바꿔 Release에 붙인 뒤 CurseForge에도 올립니다.
+자세한 순서는 [docs/RELEASING.md](docs/RELEASING.md)를 보세요.
 로컬에서 zip만 만들려면 `scripts/package.sh LevelPace 1.0.1` (결과: `dist/`).
 
 ## 후원
@@ -101,11 +108,13 @@ I'm sharing them in case they help you too. ✨
 
 ## Addons
 
-| Addon | Description | Latest version |
+| Addon | Description | Get it |
 |---|---|---|
-| [LevelPace (레벨페이스)](addons/LevelPace) | Leveling helper: XP per hour and time to next level | [Releases](../../releases) |
-| [CenterBar (센터바)](addons/CenterBar) | Up to 18 action buttons around your character | [Releases](../../releases) |
-| [HyveoCenter (hyveo 애드온 센터)](addons/HyveoCenter) | Manage the addons above in one in-game window | [Releases](../../releases) |
+| [LevelPace (레벨페이스)](addons/LevelPace) | Leveling helper: XP per hour and time to next level | [CurseForge](https://www.curseforge.com/wow/addons/levelpace) · [zip](../../releases) |
+| [CenterBar (센터바)](addons/CenterBar) | Up to 18 action buttons around your character | [CurseForge](https://www.curseforge.com/wow/addons/centerbar) · [zip](../../releases) |
+| [HyveoCenter (hyveo 애드온 센터)](addons/HyveoCenter) | Manage the addons above in one in-game window | [CurseForge](https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo) · [zip](../../releases) |
+
+All three are **available on CurseForge.** Screenshots and details are also at [hyveo.github.io/addons](https://hyveo.github.io/addons/).
 
 ## Addon requests welcome
 
@@ -122,10 +131,20 @@ What to include:
 
 ## Install
 
+### Option 1. CurseForge app (recommended)
+
+1. In the [CurseForge app](https://www.curseforge.com/download/app), pick World of Warcraft and set the game version to **WoW Forever**.
+2. Search for `LevelPace`, `CenterBar` or `hyveo`, or open the CurseForge links in the table above.
+3. Click **Install**. The app also tells you about updates.
+
+### Option 2. Download the zip
+
 1. Download the zip of the addon you want from [Releases](../../releases).
 2. Unzip it and put the resulting folders into `World of Warcraft\_forever_\Interface\AddOns\`.
    If an older version is there, delete those folders first.
 3. Restart the game completely (`/reload` does not re-read the TOC).
+
+Your settings stay either way. They are saved in the `WTF` folder, not in the addon folder.
 
 ## Repository layout
 
@@ -149,14 +168,9 @@ scripts/bump-interface.sh 16003
 
 **Releasing a new version**
 
-Tag names follow `<addon folder>-v<version>`.
-
-```bash
-git tag LevelPace-v1.0.1
-git push origin LevelPace-v1.0.1
-```
-
-GitHub Actions zips only that addon, replaces `@project-version@` in the TOC with the version, and uploads it to a Release.
+Create a release on GitHub. Tag names follow `<addon folder>-v<version>` (for example `LevelPace-v1.0.3`).
+GitHub Actions zips only that addon, replaces `@project-version@` in the TOC with the version, attaches it to the Release, and uploads it to CurseForge.
+See [docs/RELEASING.md](docs/RELEASING.md) for the steps.
 To build only the zip locally, run `scripts/package.sh LevelPace 1.0.1` (output: `dist/`).
 
 ## Sponsor

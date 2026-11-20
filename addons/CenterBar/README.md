@@ -7,6 +7,11 @@
 - **만든 사람:** @hyveo
 - **소스 / 버그 제보:** https://github.com/hyveo/wow-forever-addons ([이슈 남기기](https://github.com/hyveo/wow-forever-addons/issues))
 
+## 받는 곳
+
+- **CurseForge (추천):** <https://www.curseforge.com/wow/addons/centerbar> — CurseForge 앱에서 게임 버전을 WoW Forever로 맞추고 `센터바`로 검색해도 나와요.
+- **zip:** [Releases](../../../../releases)에서 `CenterBar-버전.zip`을 받아 `Interface\AddOns\`에 넣어요.
+
 ## 기능
 
 - 버튼 6 / 12 / 18개 중 선택 (캐릭터에서 가까운 열부터 늘어남)

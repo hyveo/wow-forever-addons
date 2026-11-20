@@ -5,6 +5,11 @@
 - **만든 사람:** @hyveo
 - **소스 / 버그 제보:** https://github.com/hyveo/wow-forever-addons ([이슈 남기기](https://github.com/hyveo/wow-forever-addons/issues))
 
+## 받는 곳
+
+- **CurseForge (추천):** <https://www.curseforge.com/wow/addons/levelpace> — CurseForge 앱에서 게임 버전을 WoW Forever로 맞추고 `레벨페이스`로 검색해도 나와요.
+- **zip:** [Releases](../../../../releases)에서 `LevelPace-버전.zip`을 받아 `Interface\AddOns\`에 넣어요.
+
 ## 기능
 
 <img src="docs/icon.png" alt="레벨페이스 아이콘" width="120">
@@ -39,6 +44,9 @@
 | `/lp 바` (`bar`) | 정보 바 보이기/숨기기 |
 | `/lp 잠금` (`lock`) | 정보 바 잠금/해제 |
 | `/lp 초기화` (`reset`) | 세션 기록 초기화 |
+| `/lp 미니맵` (`minimap`) | 미니맵 버튼 보이기/숨기기 |
+
+미니맵 버튼: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그로 위치 이동.
 
 ## 알아두기
 
