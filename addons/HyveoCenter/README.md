@@ -46,7 +46,9 @@ hyveo 애드온은 `/hv` 하나로 다 열 수 있어요. 각 애드온의 원�
 
 English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文를 지원해요. 센터 왼쪽의 **언어**에서 고르면 센터바·레벨페이스도 같은 언어를 써요 (기본값은 "자동" = 게임 언어, 바꾸면 UI 다시 불러오기).
 
-번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. Spotted a bad translation? Please open a GitHub issue. Strings live in `HyveoCenter/Locales.lua`.
+Spotted a bad translation? Please open a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). Strings live in `HyveoCenter/Locales.lua`.
+
+번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요.
 
 ## 알아두기
 

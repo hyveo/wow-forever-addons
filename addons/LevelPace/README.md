@@ -52,7 +52,9 @@
 
 English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文를 지원해요. hyveo 애드온 센터에서 고른 언어를 따라가고, 센터가 없으면 게임 언어로 나와요.
 
-번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. Spotted a bad translation? Please open a GitHub issue. Strings live in `LevelPace/Locales.lua`.
+Spotted a bad translation? Please open a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). Strings live in `LevelPace/Locales.lua`.
+
+번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요.
 
 ## 알아두기
 

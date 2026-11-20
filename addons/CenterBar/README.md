@@ -47,9 +47,9 @@
 
 ## 번역
 
-번역이 어색하거나 틀린 곳이 있으면 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. 문구는 `CenterBar/Locales.lua` 한 파일에 모여 있어요.
-
 Spotted an awkward or wrong translation? Please open a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). All strings live in `CenterBar/Locales.lua`.
+
+번역이 어색하거나 틀린 곳이 있으면 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. 문구는 `CenterBar/Locales.lua` 한 파일에 모여 있어요.
 
 ## 문제가 생기면
 
