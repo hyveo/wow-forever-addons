@@ -10,7 +10,18 @@ CurseForge에는 따로 올리지 않아도 됩니다.
 3. GitHub에서 릴리즈를 만든다 (태그: `애드온폴더명-v버전`)
 4. 1~2분 뒤 결과를 확인한다
 
-## 1. 올리기 전에
+## 0. 배포 전에 테스트 zip 받기
+
+`main`에 코드가 들어가거나 PR이 올라오면 **테스트용 zip이 자동으로 만들어져요.** 배포(GitHub 릴리즈, CurseForge)는 되지 않아요.
+
+1. [Actions](https://github.com/hyveo/wow-forever-addons/actions)에서 `Build addons (test zip)` 실행을 열어요.
+2. 맨 아래 **Artifacts**에서 `CenterBar-1.4.0-dev-a1b2c3d` 같은 이름을 눌러 받아요. (GitHub에 로그인해야 받을 수 있어요)
+3. 풀면 나오는 폴더(예: `CenterBar/`)를 `Interface\AddOns\`에 넣고 게임에서 확인해요.
+
+- 버전 이름은 `CHANGELOG 맨 위 버전-dev-커밋 7자리`예요. 게임 애드온 목록에도 이 버전으로 보여요.
+- 파일은 30일 동안 남아요. Actions 화면에서 `Run workflow`를 눌러 아무 때나 다시 만들 수도 있어요.
+- 확인이 끝나면 아래 순서대로 태그를 달아 배포해요.
+
 
 - 바꾼 코드가 `main` 브랜치에 들어가 있어야 해요. 릴리즈는 그 시점의 `main`을 묶어요.
 - 해당 애드온의 `CHANGELOG.md` 맨 위에 새 버전 항목을 적어요. 이 내용이 GitHub 릴리즈 설명과 CurseForge 변경 내역으로 그대로 들어가요.

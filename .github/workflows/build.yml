@@ -1,0 +1,54 @@
+# 테스트용 빌드: main에 코드가 들어오거나 PR이 올라오면 애드온마다 zip을 만들어
+# Actions 실행 결과의 "Artifacts"에 올려 둔다. 배포(GitHub Release, CurseForge)는 하지 않는다.
+# 배포는 지금처럼 태그(<애드온폴더명>-v<버전>)를 달 때만 release.yml이 한다.
+name: Build addons (test zip)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "addons/**"
+      - "scripts/**"
+      - ".github/workflows/build.yml"
+  pull_request:
+    paths:
+      - "addons/**"
+      - "scripts/**"
+      - ".github/workflows/build.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        addon: [CenterBar, LevelPace, HyveoCenter]
+    steps:
+      - uses: actions/checkout@v4
+
+      # 버전 = CHANGELOG 맨 위 버전 + -dev-커밋 7자리 (예: 1.4.0-dev-a1b2c3d)
+      - name: 테스트 버전 이름 정하기
+        id: meta
+        run: |
+          A="${{ matrix.addon }}"
+          V=$(grep -m1 -oE '^## [0-9]+(\.[0-9]+)*' "addons/$A/CHANGELOG.md" | cut -d' ' -f2 || true)
+          SHA=$(echo "${{ github.event.pull_request.head.sha || github.sha }}" | cut -c1-7)
+          echo "version=${V:-0.0.0}-dev-$SHA" >> "$GITHUB_OUTPUT"
+
+      # 릴리즈와 같은 스크립트로 묶은 뒤, Artifact가 zip 안의 zip이 되지 않게 풀어서 올린다
+      - name: zip 만들기
+        run: |
+          ZIP=$(scripts/package.sh '${{ matrix.addon }}' '${{ steps.meta.outputs.version }}')
+          mkdir -p out && unzip -q "$ZIP" -d out
+
+      # Artifact 이름이 곧 내려받는 zip 이름이 된다. 풀면 게임 폴더(예: CenterBar/)가 바로 나온다.
+      - name: Artifact로 올리기
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.addon }}-${{ steps.meta.outputs.version }}
+          path: out/
+          retention-days: 30
