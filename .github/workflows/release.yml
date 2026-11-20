@@ -36,10 +36,10 @@ jobs:
             | grep -v '^!\[' > notes.md || true
           IMG="addons/$A/docs/v$V-before-after.png"
           if [ -f "$IMG" ]; then
-            printf '\n### 게임 화면 예시 (수정 전 → 후)\n\n![%s %s](https://github.com/%s/blob/%s/%s?raw=true)\n' \
+            printf '\n### Screenshot (before → after) / 게임 화면 예시 (수정 전 → 후)\n\n![%s %s](https://github.com/%s/blob/%s/%s?raw=true)\n' \
               "$A" "$V" "$GITHUB_REPOSITORY" "$GITHUB_REF_NAME" "$IMG" >> notes.md
           fi
-          printf '\n---\n설치: zip을 풀어 나온 폴더를 `Interface\\AddOns\\`에 넣고 게임 재시작\n' >> notes.md
+          printf '\n---\nInstall: unzip and put the folder into `Interface\\AddOns\\`, then restart the game.\n\n설치: zip을 풀어 나온 폴더를 `Interface\\AddOns\\`에 넣고 게임 재시작\n' >> notes.md
           cat notes.md
 
       - name: Release 생성 또는 파일 갱신
