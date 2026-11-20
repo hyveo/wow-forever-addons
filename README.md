@@ -25,6 +25,25 @@ I'm sharing them in case they help you too. ✨
 
 All three are **available on CurseForge.** Screenshots and details are also at [hyveo.github.io/addons](https://hyveo.github.io/addons/).
 
+## Supported languages
+
+| Language | Game client | CenterBar | LevelPace | HyveoCenter |
+|---|---|:-:|:-:|:-:|
+| English | enUS / enGB | ✅ | ✅ | ✅ |
+| 한국어 (Korean) | koKR | ✅ | ✅ | ✅ |
+| Deutsch (German) | deDE | ✅ | – | – |
+| Español — América Latina | esMX | ✅ | – | – |
+| Español — España | esES | ✅ | – | – |
+| Français (French) | frFR | ✅ | – | – |
+| Português (Portuguese) | ptBR | ✅ | – | – |
+| Русский (Russian) | ruRU | ✅ | – | – |
+| 简体中文 (Simplified Chinese) | zhCN | ✅ | – | – |
+| 繁體中文 (Traditional Chinese) | zhTW | ✅ | – | – |
+
+- The addons follow your game language automatically. CenterBar also lets you pick a language in its options window.
+- In a language without a translation, LevelPace and HyveoCenter show English.
+- Found a wrong or awkward translation? Please open an [issue](../../issues).
+
 ## Addon requests welcome
 
 If there is an addon you wish existed while playing WoW Forever, let us know.
@@ -121,6 +140,25 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 | [hyveo 애드온 센터 (HyveoCenter)](addons/HyveoCenter) | 위 애드온들을 게임 안에서 한 창으로 켜고 끄고 설정 | [CurseForge](https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo) · [zip](../../releases) |
 
 세 애드온 모두 **CurseForge에서 받을 수 있어요.** 애드온 소개와 예시 화면은 [hyveo.github.io/addons](https://hyveo.github.io/addons/)에도 있습니다.
+
+## 지원 언어
+
+| 언어 | 게임 클라이언트 | 센터바 | 레벨페이스 | 애드온 센터 |
+|---|---|:-:|:-:|:-:|
+| English (영어) | enUS / enGB | ✅ | ✅ | ✅ |
+| 한국어 | koKR | ✅ | ✅ | ✅ |
+| Deutsch (독일어) | deDE | ✅ | – | – |
+| Español — América Latina (스페인어, 중남미) | esMX | ✅ | – | – |
+| Español — España (스페인어, 스페인) | esES | ✅ | – | – |
+| Français (프랑스어) | frFR | ✅ | – | – |
+| Português (포르투갈어) | ptBR | ✅ | – | – |
+| Русский (러시아어) | ruRU | ✅ | – | – |
+| 简体中文 (중국어 간체) | zhCN | ✅ | – | – |
+| 繁體中文 (중국어 번체) | zhTW | ✅ | – | – |
+
+- 게임 언어를 자동으로 따라가요. 센터바는 설정 창에서 언어를 직접 고를 수도 있어요.
+- 번역이 없는 언어에서는 레벨페이스와 애드온 센터가 영어로 나와요.
+- 번역이 틀리거나 어색하면 [이슈](../../issues)로 알려 주세요.
 
 ## 애드온 요청 받습니다
 
