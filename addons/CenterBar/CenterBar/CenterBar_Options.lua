@@ -298,7 +298,7 @@ local function Build()
 
 	-- 도움말 두 줄: 아래 것부터 놓고 위 것을 그 위에 붙여서, 줄이 넘어가도 겹치지 않게 한다
 	local tip2 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	tip2:SetPoint("BOTTOMLEFT", 18, 56) -- 아래 버튼(높이 24, 바닥에서 14)과 넉넉히 띄움
+	tip2:SetPoint("BOTTOMLEFT", 18, 58) -- 아래 버튼(높이 26, 바닥에서 14)과 넉넉히 띄움
 	tip2:SetWidth(W - 36) tip2:SetJustifyH("LEFT")
 	tip2:SetText(L2.TIP2)
 	local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
@@ -306,16 +306,19 @@ local function Build()
 	tip1:SetWidth(W - 36) tip1:SetJustifyH("LEFT")
 	tip1:SetText(L2.TIP1)
 
+	-- 아래 버튼 두 개: 글자 길이에 맞춰 넓히되 최소 130, 높이 26, 사이 20
 	local reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	reset:SetSize(100, 24)
-	reset:SetPoint("BOTTOM", -56, 14)
 	reset:SetText(L2.RESET)
 	reset:SetScript("OnClick", function() CenterBar.Reset(); Refresh() end)
 	local close = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
-	close:SetSize(100, 24)
-	close:SetPoint("BOTTOM", 56, 14)
 	close:SetText(L2.CLOSE)
 	close:SetScript("OnClick", function() f:Hide() end)
+	local function TextW(b) local fs = b:GetFontString() return fs and fs:GetStringWidth() or 0 end
+	local BW = math.max(130, math.ceil(math.max(TextW(reset), TextW(close)) + 36))
+	reset:SetSize(BW, 26)
+	close:SetSize(BW, 26)
+	reset:SetPoint("BOTTOMRIGHT", f, "BOTTOM", -10, 14)
+	close:SetPoint("BOTTOMLEFT", f, "BOTTOM", 10, 14)
 
 	---------------------------------------------------------------------------
 	-- 위치 편집: 설정 창이 열려 있는 동안 화면 전체 격자 + 끌어 옮기는 번호 칸
