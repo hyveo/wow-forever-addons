@@ -4,7 +4,7 @@ local _, ns = ...
 local L2 = ns.L2 -- 문자열은 Locales.lua
 
 local f = CreateFrame("Frame", "CenterBarOptionsFrame", UIParent, "BasicFrameTemplateWithInset")
-f:SetSize(470, 560)
+f:SetSize(470, 595)
 f:SetPoint("LEFT", 40, 0)
 f:SetFrameStrata("DIALOG")
 f:SetClampedToScreen(true)
@@ -35,6 +35,7 @@ local function Build()
 	f.title:SetText(L2.TITLE)
 
 	local LEFT, RIGHT = 20, 250
+	local checkLabels = {} -- 창 너비를 정할 때 가장 긴 체크박스 문구를 잰다
 
 	local function Header(text, x, y)
 		local fs = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -95,6 +96,7 @@ local function Build()
 		fs:SetPoint("LEFT", c, "RIGHT", 2, 1)
 		fs:SetText(label)
 		c.label = fs
+		checkLabels[#checkLabels + 1] = fs
 		c:SetScript("OnClick", function(self)
 			local v = self:GetChecked() and true or false
 			if invert then v = not v end
@@ -288,23 +290,30 @@ local function Build()
 	Check(L2.NOMINIMAP, "minimapHide", -414)
 	Check(L2.QUIET, "quiet", -438)
 
-	local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	tip1:SetPoint("BOTTOMLEFT", 18, 64)
-	tip1:SetWidth(434) tip1:SetJustifyH("LEFT")
-	tip1:SetText(L2.TIP1)
+	-- 문구가 긴 언어(독일어 등)는 체크박스 글자가 창 밖으로 나가지 않게 창을 넓힌다
+	local maxLabel = 0
+	for _, fs in ipairs(checkLabels) do maxLabel = math.max(maxLabel, fs:GetStringWidth() or 0) end
+	local W = math.max(470, math.ceil(RIGHT + 24 + maxLabel + 24))
+	f:SetWidth(W)
+
+	-- 도움말 두 줄: 아래 것부터 놓고 위 것을 그 위에 붙여서, 줄이 넘어가도 겹치지 않게 한다
 	local tip2 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-	tip2:SetPoint("BOTTOMLEFT", 18, 40)
-	tip2:SetWidth(434) tip2:SetJustifyH("LEFT")
+	tip2:SetPoint("BOTTOMLEFT", 18, 56) -- 아래 버튼(높이 24, 바닥에서 14)과 넉넉히 띄움
+	tip2:SetWidth(W - 36) tip2:SetJustifyH("LEFT")
 	tip2:SetText(L2.TIP2)
+	local tip1 = f:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+	tip1:SetPoint("BOTTOMLEFT", tip2, "TOPLEFT", 0, 4)
+	tip1:SetWidth(W - 36) tip1:SetJustifyH("LEFT")
+	tip1:SetText(L2.TIP1)
 
 	local reset = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
 	reset:SetSize(100, 24)
-	reset:SetPoint("BOTTOM", -56, 12)
+	reset:SetPoint("BOTTOM", -56, 14)
 	reset:SetText(L2.RESET)
 	reset:SetScript("OnClick", function() CenterBar.Reset(); Refresh() end)
 	local close = CreateFrame("Button", nil, f, "UIPanelButtonTemplate")
 	close:SetSize(100, 24)
-	close:SetPoint("BOTTOM", 56, 12)
+	close:SetPoint("BOTTOM", 56, 14)
 	close:SetText(L2.CLOSE)
 	close:SetScript("OnClick", function() f:Hide() end)
 
