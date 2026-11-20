@@ -2,51 +2,12 @@
 -- 캐릭터 양옆에 액션 버튼을 최대 18개 놓아 주는 애드온.
 -- 만든 사람: @hyveo  /  https://github.com/hyveo/wow-forever-addons
 
-local ADDON_NAME = ...
+local ADDON_NAME, ns = ...
 
 ---------------------------------------------------------------------------
 -- 문자열
 ---------------------------------------------------------------------------
-local L
-if GetLocale() == "koKR" then
-	L = {
-		TITLE       = "센터바",
-		BUTTON      = "센터바 %d",
-		NEXT_SLOT   = "센터바 다음 슬롯",
-		SLOT        = "슬롯 %d",
-		SLOT_NOW    = "슬롯 %d번으로 바꿨어요.",
-		COMBAT_WAIT = "전투가 끝나면 적용할게요.",
-		LOCKED      = "센터바를 잠갔어요.",
-		UNLOCKED    = "센터바 잠금을 풀었어요. 가운데 손잡이를 드래그해 옮기세요.",
-		PRESETS     = { "기본", "둥글게", "세로 3줄 1", "세로 3줄 2", "세로 3줄 3" },
-		MM_LEFT     = "왼쪽 클릭: 설정 창",
-		MM_RIGHT    = "오른쪽 클릭: 다음 슬롯",
-		MM_DRAG     = "드래그: 버튼 옮기기",
-		CANT_PLACE  = "여기에는 주문, 아이템, 매크로만 넣을 수 있어요.",
-		RESET       = "센터바 위치와 설정을 처음으로 되돌렸어요. (버튼에 넣은 기술은 그대로예요)",
-		HELP        = "/cb — 설정 창  |  /cb 1 ~ /cb 5 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
-		HANDLE      = "센터바 — 드래그해서 옮기기",
-	}
-else
-	L = {
-		TITLE       = "CenterBar",
-		BUTTON      = "CenterBar %d",
-		NEXT_SLOT   = "CenterBar next slot",
-		SLOT        = "Slot %d",
-		SLOT_NOW    = "Switched to slot %d.",
-		COMBAT_WAIT = "Will apply after combat.",
-		LOCKED      = "CenterBar locked.",
-		UNLOCKED    = "CenterBar unlocked. Drag the handle in the middle to move it.",
-		PRESETS     = { "Default", "Round", "Columns 1", "Columns 2", "Columns 3" },
-		MM_LEFT     = "Left-click: options",
-		MM_RIGHT    = "Right-click: next slot",
-		MM_DRAG     = "Drag: move this button",
-		CANT_PLACE  = "Only spells, items and macros can go here.",
-		RESET       = "CenterBar position and settings reset. (Your spells stay on the buttons)",
-		HELP        = "/cb — options  |  /cb 1 … /cb 5 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
-		HANDLE      = "CenterBar — drag to move",
-	}
-end
+local L = ns.L -- 문자열은 Locales.lua (게임 언어에 맞춰 고름, 없는 말은 영어)
 CenterBar_L = L
 
 local quiet = false -- 설정의 "채팅창 메시지 숨김"
@@ -582,7 +543,6 @@ for i = 1, NUM_BUTTONS do
 
 	-- 단축키: Bindings.xml의 CLICK 바인딩과 같은 이름
 	b.command = "CLICK " .. name .. ":LeftButton"
-	_G["BINDING_NAME_" .. b.command] = L.BUTTON:format(i)
 	buttons[i] = b
 
 	local catch = CreateFrame("Button", nil, UIParent)
@@ -594,8 +554,13 @@ for i = 1, NUM_BUTTONS do
 	catch:Hide()
 	catchers[i] = catch
 end
-BINDING_HEADER_CENTERBAR = L.TITLE
-BINDING_NAME_CENTERBAR_NEXTSLOT = L.NEXT_SLOT
+-- 단축키 설정 화면에 보이는 이름 (언어를 바꾸면 다시 부른다)
+local function SetBindingNames()
+	for i, b in ipairs(buttons) do _G["BINDING_NAME_" .. b.command] = L.BUTTON:format(i) end
+	BINDING_HEADER_CENTERBAR = L.TITLE
+	BINDING_NAME_CENTERBAR_NEXTSLOT = L.NEXT_SLOT
+end
+SetBindingNames()
 
 local function UpdateCatchers(cursor)
 	local on = cursor and not InCombatLockdown()
@@ -887,6 +852,13 @@ ev:RegisterEvent("PLAYER_REGEN_DISABLED")
 ev:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" then
 		if arg1 ~= ADDON_NAME then return end
+		-- 설정 창에서 고른 언어 (계정 공통). 없으면 게임 언어.
+		CenterBarGlobalDB = CenterBarGlobalDB or {}
+		if CenterBarGlobalDB.lang then
+			ns.ApplyLocale(CenterBarGlobalDB.lang)
+			handle.text:SetText(L.TITLE)
+			SetBindingNames()
+		end
 		CenterBarDB = CenterBarDB or {}
 		db = CenterBarDB
 		CopyDefaults(db, DEFAULTS)
