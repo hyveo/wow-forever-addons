@@ -2,7 +2,9 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
-## 1.5.0 — 2026-11-21
+## Unreleased · 릴리즈 전
+
+Not released yet. The version number is decided at release. 아직 배포하지 않았어요. 버전 번호는 릴리즈할 때 정해요.
 
 **English**
 
