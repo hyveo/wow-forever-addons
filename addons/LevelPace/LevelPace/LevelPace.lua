@@ -49,7 +49,13 @@ if GetLocale() == "koKR" then
 		MSG_RESET    = "세션 기록을 초기화했어요.",
 		MSG_LOCKED   = "바를 잠갔어요.",
 		MSG_UNLOCKED = "바 잠금을 풀었어요. 드래그해서 옮길 수 있어요.",
-		MSG_HELP     = "/lp — 상세 창  |  /lp 바 — 바 보이기/숨기기  |  /lp 잠금 — 바 잠금/해제  |  /lp 초기화 — 세션 초기화",
+		MSG_HELP     = "/lp — 상세 창  |  /lp 바 — 바 보이기/숨기기  |  /lp 잠금 — 바 잠금/해제  |  /lp 초기화 — 세션 초기화  |  /lp 미니맵 — 미니맵 버튼 보이기/숨기기",
+		MM_LEFT      = "왼쪽 클릭: 상세 창",
+		MM_RIGHT     = "오른쪽 클릭: 정보 바 보이기/숨기기",
+		MM_DRAG      = "드래그: 버튼 옮기기",
+		MM_HIDE      = "/lp 미니맵: 이 버튼 숨기기",
+		MSG_MM_ON    = "미니맵 버튼을 켰어요.",
+		MSG_MM_OFF   = "미니맵 버튼을 숨겼어요. 다시 켜려면 /lp 미니맵",
 	}
 else
 	L = {
@@ -93,7 +99,13 @@ else
 		MSG_RESET    = "Session reset.",
 		MSG_LOCKED   = "Bar locked.",
 		MSG_UNLOCKED = "Bar unlocked. Drag it to move.",
-		MSG_HELP     = "/lp — details  |  /lp bar — show/hide bar  |  /lp lock — lock/unlock bar  |  /lp reset — reset session",
+		MSG_HELP     = "/lp — details  |  /lp bar — show/hide bar  |  /lp lock — lock/unlock bar  |  /lp reset — reset session  |  /lp minimap — show/hide minimap button",
+		MM_LEFT      = "Left-click: details",
+		MM_RIGHT     = "Right-click: show/hide the info bar",
+		MM_DRAG      = "Drag: move this button",
+		MM_HIDE      = "/lp minimap: hide this button",
+		MSG_MM_ON    = "Minimap button shown.",
+		MSG_MM_OFF   = "Minimap button hidden. Use /lp minimap to show it again.",
 	}
 end
 
@@ -119,6 +131,7 @@ local questPending, questPendingTime = 0, 0
 local levelTimeMark
 local initialized = false
 
+local UpdateMinimapButton -- 아래 "미니맵 버튼"에서 정의
 local function NewSession()
 	session = { start = GetTime(), xp = 0, questXP = 0, killXP = 0, lastKillXP = nil }
 	wipe(recent)
@@ -569,6 +582,7 @@ events:SetScript("OnEvent", function(_, event, ...)
 		db.history = db.history or {}
 		db.levelTime = db.levelTime or 0
 		ApplyBarPosition()
+		UpdateMinimapButton()
 
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		if initialized then return end
@@ -603,6 +617,65 @@ end)
 ---------------------------------------------------------------------------
 -- 명령어
 ---------------------------------------------------------------------------
+---------------------------------------------------------------------------
+-- 미니맵 버튼: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그 = 둘레를 따라 옮기기
+---------------------------------------------------------------------------
+local mm = CreateFrame("Button", "LevelPaceMinimapButton", Minimap)
+mm:SetSize(31, 31)
+mm:SetFrameStrata("MEDIUM")
+mm:SetFrameLevel(8)
+mm:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+mm:RegisterForDrag("LeftButton")
+mm:SetHighlightTexture("Interface\\Minimap\\UI-Minimap-ZoomButton-Highlight")
+mm.bg = mm:CreateTexture(nil, "BACKGROUND")
+mm.bg:SetTexture("Interface\\Minimap\\UI-Minimap-Background")
+mm.bg:SetSize(20, 20)
+mm.bg:SetPoint("TOPLEFT", 7, -5)
+mm.icon = mm:CreateTexture(nil, "ARTWORK")
+mm.icon:SetTexture("Interface\\AddOns\\LevelPace\\icon")
+mm.icon:SetSize(18, 18)
+mm.icon:SetPoint("TOPLEFT", 7, -6)
+mm.icon:SetTexCoord(0.08, 0.92, 0.08, 0.92)
+mm.border = mm:CreateTexture(nil, "OVERLAY")
+mm.border:SetTexture("Interface\\Minimap\\MiniMap-TrackingBorder")
+mm.border:SetSize(53, 53)
+mm.border:SetPoint("TOPLEFT")
+mm:Hide()
+
+UpdateMinimapButton = function()
+	if not db then return end
+	mm:SetShown(not db.minimapHide)
+	local a = math.rad(db.minimapAngle or 240)
+	local r = (Minimap:GetWidth() or 140) / 2 + 5
+	mm:ClearAllPoints()
+	mm:SetPoint("CENTER", Minimap, "CENTER", math.cos(a) * r, math.sin(a) * r)
+end
+
+mm:SetScript("OnClick", function(_, button)
+	if button == "RightButton" then SetBarShown(not db.bar.shown) else ToggleWindow() end
+end)
+mm:SetScript("OnDragStart", function(self)
+	self:SetScript("OnUpdate", function()
+		local mx, my = Minimap:GetCenter()
+		local cx, cy = GetCursorPosition()
+		local s = Minimap:GetEffectiveScale()
+		if not mx or not s or s == 0 or not db then return end
+		db.minimapAngle = math.deg(math.atan2(cy / s - my, cx / s - mx))
+		UpdateMinimapButton()
+	end)
+end)
+mm:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
+mm:SetScript("OnEnter", function(self)
+	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
+	GameTooltip:AddLine(L.TITLE or "LevelPace")
+	GameTooltip:AddLine(L.MM_LEFT, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_RIGHT, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_DRAG, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_HIDE, 0.6, 0.6, 0.6)
+	GameTooltip:Show()
+end)
+mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
 SLASH_LEVELPACE1 = "/lp"
 SLASH_LEVELPACE2 = "/levelpace"
 SLASH_LEVELPACE3 = "/레벨"
@@ -618,6 +691,10 @@ SlashCmdList.LEVELPACE = function(msg)
 		SetBarLocked(not db.bar.locked)
 	elseif msg == "reset" or msg == "초기화" then
 		ResetSession()
+	elseif msg == "minimap" or msg == "미니맵" then
+		db.minimapHide = not db.minimapHide
+		UpdateMinimapButton()
+		Print(db.minimapHide and L.MSG_MM_OFF or L.MSG_MM_ON)
 	else
 		Print(L.MSG_HELP)
 	end
