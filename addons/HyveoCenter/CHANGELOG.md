@@ -1,5 +1,17 @@
 # 변경 내역
 
+## 0.3.0 — 2026-11-21
+
+- Now in 9 languages: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- New language picker on the left side of the center. It sets the language for all hyveo addons (CenterBar and LevelPace follow it). Default is "Auto" (game language); changes apply after reloading the UI
+- Minimap button tooltip, addon list title and description are translated too
+
+**한국어**
+
+- 9개 언어 지원: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- 센터 왼쪽에 언어 선택 추가. 여기서 고른 언어를 모든 hyveo 애드온(센터바, 레벨페이스)이 따라가요. 기본값은 "자동"(게임 언어)이고, UI를 다시 불러오면 적용돼요
+- 미니맵 버튼 툴팁, 애드온 목록의 이름·설명도 언어별로 나와요
+
 ## 0.2.0 — 2026-11-19
 
 - 미니맵 버튼 추가: 클릭하면 애드온 센터가 열리고, 거기서 각 애드온 창으로 이동 (드래그로 위치 이동, `/hv minimap`으로 숨기기)

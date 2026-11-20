@@ -26,7 +26,7 @@
 - 버튼 툴팁 끄기
 - 단축키 지정 (게임 메뉴 → 단축키 설정 → 애드온 → 센터바)
 - 재사용 대기시간·충전 횟수·사용 가능 여부는 게임 기본 액션 버튼과 같은 방식으로 표시
-- 언어: 한국어, English, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文 — 설정 창에서 고르거나 "자동"으로 게임 언어를 따라가요
+- 언어: 한국어, English, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文 — 기본은 hyveo 애드온 센터에서 고른 언어를 따라가고(센터가 없으면 게임 언어), 설정 창에서 센터바만 따로 고를 수도 있어요
 
 ## 명령어
 

@@ -1,5 +1,17 @@
 # 변경 내역
 
+## 1.1.0 — 2026-11-21
+
+- Now in 9 languages: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- Uses the language chosen in hyveo Addon Center; without the center it follows your game language
+- Text without a translation is shown in English
+
+**한국어**
+
+- 9개 언어 지원: English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- hyveo 애드온 센터에서 고른 언어를 따라가요. 센터가 없으면 게임 언어로 나와요
+- 번역이 없는 문구는 영어로 보여요
+
 ## 1.0.3 — 2026-11-20
 
 - 미니맵 버튼 추가: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그로 위치 이동 (`/lp 미니맵`으로 숨기기)

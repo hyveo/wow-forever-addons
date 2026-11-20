@@ -48,6 +48,12 @@
 
 미니맵 버튼: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그로 위치 이동.
 
+## 언어
+
+English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文를 지원해요. hyveo 애드온 센터에서 고른 언어를 따라가고, 센터가 없으면 게임 언어로 나와요.
+
+번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요. Spotted a bad translation? Please open a GitHub issue. Strings live in `LevelPace/Locales.lua`.
+
 ## 알아두기
 
 - 설정과 레벨업 기록은 캐릭터별로 저장됩니다.

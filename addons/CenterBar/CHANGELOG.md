@@ -1,5 +1,17 @@
 # 변경 내역
 
+## 1.5.0 — 2026-11-21
+
+- The language picker has a new default, "Follow addon center": CenterBar uses the language chosen in hyveo Addon Center
+- You can still pick "Auto" (game language) or a specific language just for CenterBar
+- Without the addon center installed, it works as before (default is the game language)
+
+**한국어**
+
+- 언어 선택에 새 기본값 "애드온 센터 따름" 추가: hyveo 애드온 센터에서 고른 언어를 센터바도 따라가요
+- 센터바만 따로 "자동"(게임 언어)이나 특정 언어로 고를 수도 있어요
+- 애드온 센터가 없으면 예전처럼 게임 언어가 기본이에요
+
 ## 1.4.1 — 2026-11-21
 
 - 설정 창: 독일어처럼 문구가 긴 언어에서는 체크박스 글자가 줄바꿈돼서 창 밖으로 나가지 않아요 (창 너비는 그대로)

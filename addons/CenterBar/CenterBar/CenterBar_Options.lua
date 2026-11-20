@@ -173,11 +173,24 @@ local function Build()
 	---------------------------------------------------------------------------
 	Header(L2.LANG, LEFT, -318)
 	do
-		local function Label(code)
-			if code == "auto" then return L2.LANG_AUTO:format(ns.GameLocale()) end
+		-- 저장값: nil = hyveo 애드온 센터를 따름(센터가 없으면 게임 언어), "auto" = 게임 언어, 그 밖 = 언어 코드
+		local hasCenter = HyveoCenter_GetLanguage ~= nil
+		local function Name(code)
+			if not code or code == "auto" then return L2.LANG_AUTO:format(ns.GameLocale()) end
 			return ns.LANG_NAMES[code] or code
 		end
-		local function Current() return (CenterBarGlobalDB and CenterBarGlobalDB.lang) or "auto" end
+		local function Label(code)
+			if code == "follow" then -- 짧게: 센터가 고른 언어 이름, 없으면 게임 언어 코드
+				local c = HyveoCenter_GetLanguage()
+				return L2.LANG_FOLLOW:format(c and ns.LANG_NAMES[c] or ns.GameLocale())
+			end
+			return Name(code)
+		end
+		local function Current()
+			local v = CenterBarGlobalDB and CenterBarGlobalDB.lang
+			if v then return v end
+			return hasCenter and "follow" or "auto"
+		end
 
 		StaticPopupDialogs["CENTERBAR_LANGUAGE"] = {
 			text = "%s",
@@ -204,14 +217,15 @@ local function Build()
 		list:EnableMouse(true)
 		list:Hide()
 
-		local codes = { "auto" }
+		local codes = hasCenter and { "follow", "auto" } or { "auto" }
+		local head = #codes -- 위쪽 묶음(따름/자동) 다음에 구분선
 		for _, c in ipairs(ns.LANGS) do codes[#codes + 1] = c end
 		local rows = {}
 		local ROW = 20
 		for i, code in ipairs(codes) do
 			local r = CreateFrame("Button", nil, list)
 			r:SetSize(220, ROW)
-			r:SetPoint("TOPLEFT", 4, -4 - (i - 1) * ROW - (i > 1 and 6 or 0))
+			r:SetPoint("TOPLEFT", 4, -4 - (i - 1) * ROW - (i > head and 6 or 0))
 			r.hl = r:CreateTexture(nil, "HIGHLIGHT")
 			r.hl:SetAllPoints()
 			r.hl:SetColorTexture(1, 0.82, 0, 0.15)
@@ -226,7 +240,11 @@ local function Build()
 				list:Hide()
 				if code == Current() then return end
 				CenterBarGlobalDB = CenterBarGlobalDB or {}
-				CenterBarGlobalDB.lang = (code ~= "auto") and code or nil
+				if code == "follow" or (code == "auto" and not hasCenter) then
+					CenterBarGlobalDB.lang = nil
+				else
+					CenterBarGlobalDB.lang = code
+				end
 				drop:SetText(Label(code))
 				StaticPopup_Show("CENTERBAR_LANGUAGE", L2.LANG_ASK:format(Label(code)) .. "\n" .. L2.LANG_RELOAD)
 			end)
@@ -236,8 +254,8 @@ local function Build()
 		local sep = list:CreateTexture(nil, "ARTWORK")
 		sep:SetColorTexture(0.6, 0.5, 0.3, 0.6)
 		sep:SetHeight(1)
-		sep:SetPoint("TOPLEFT", 8, -4 - ROW - 3)
-		sep:SetPoint("TOPRIGHT", -8, -4 - ROW - 3)
+		sep:SetPoint("TOPLEFT", 8, -4 - head * ROW - 3)
+		sep:SetPoint("TOPRIGHT", -8, -4 - head * ROW - 3)
 		list:SetSize(228, 8 + #codes * ROW + 6)
 
 		drop:SetScript("OnClick", function() list:SetShown(not list:IsShown()) end)
@@ -249,6 +267,7 @@ local function Build()
 			drop:SetText(Label(cur))
 			for i, code in ipairs(codes) do
 				rows[i].check:SetShown(code == cur)
+				rows[i].text:SetText(Label(code))
 			end
 		end
 	end
