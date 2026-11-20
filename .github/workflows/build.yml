@@ -1,4 +1,4 @@
-# 테스트용 빌드: main에 코드가 들어오거나 PR이 올라오면 애드온마다 zip을 만들어
+# 테스트용 빌드: main에 코드가 들어오거나 PR이 올라오면 "바뀐 애드온만" zip을 만들어
 # Actions 실행 결과의 "Artifacts"에 올려 둔다. 배포(GitHub Release, CurseForge)는 하지 않는다.
 # 배포는 지금처럼 태그(<애드온폴더명>-v<버전>)를 달 때만 release.yml이 한다.
 name: Build addons (test zip)
@@ -21,12 +21,52 @@ permissions:
   contents: read
 
 jobs:
+  # 이번 PR이나 병합에서 실제로 바뀐 애드온만 고른다.
+  # 묶는 스크립트나 이 워크플로가 바뀌었거나, 직접 실행한 경우에는 전부 만든다.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      addons: ${{ steps.pick.outputs.addons }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: 바뀐 애드온 고르기
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          PR_BASE: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD: ${{ github.event.pull_request.head.sha }}
+          BEFORE: ${{ github.event.before }}
+          AFTER: ${{ github.sha }}
+        run: |
+          ALL='["CenterBar","LevelPace","HyveoCenter"]'
+          if [ "$EVENT" = "pull_request" ]; then
+            FILES=$(git diff --name-only "$PR_BASE...$PR_HEAD" || echo __ALL__)
+          elif [ "$EVENT" = "push" ] && [ -n "$BEFORE" ] && ! echo "$BEFORE" | grep -qE '^0+$'; then
+            FILES=$(git diff --name-only "$BEFORE" "$AFTER" || echo __ALL__)
+          else
+            FILES=__ALL__
+          fi
+          echo "바뀐 파일:"; echo "$FILES"
+          if echo "$FILES" | grep -qE '^(__ALL__|scripts/|\.github/workflows/build\.yml)'; then
+            LIST="$ALL"
+          else
+            LIST=$(echo "$FILES" | sed -nE 's#^addons/([^/]+)/.*#\1#p' | sort -u \
+              | while read -r a; do [ -d "addons/$a" ] && echo "$a"; done \
+              | jq -R . | jq -sc .)
+          fi
+          echo "만들 애드온: $LIST"
+          echo "addons=$LIST" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: changes
+    if: ${{ needs.changes.outputs.addons != '[]' && needs.changes.outputs.addons != '' }}
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        addon: [CenterBar, LevelPace, HyveoCenter]
+        addon: ${{ fromJSON(needs.changes.outputs.addons) }}
     steps:
       - uses: actions/checkout@v4
 
