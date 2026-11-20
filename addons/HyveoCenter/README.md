@@ -7,6 +7,11 @@ hyveo가 만든 와우 포에버 애드온을 게임 안에서 한 창으로 관
 - **만든 사람:** @hyveo
 - **소스 / 버그 제보:** https://github.com/hyveo/wow-forever-addons ([이슈 남기기](https://github.com/hyveo/wow-forever-addons/issues))
 
+## 받는 곳
+
+- **CurseForge (추천):** <https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo> — CurseForge 앱에서 게임 버전을 WoW Forever로 맞추고 `hyveo 애드온 센터`로 검색해도 나와요.
+- **zip:** [Releases](../../../../releases)에서 `HyveoCenter-버전.zip`을 받아 `Interface\AddOns\`에 넣어요.
+
 ## 할 수 있는 것
 
 - 레벨페이스, 센터바가 설치·켜짐 상태인지, 몇 버전인지 한눈에 보기
