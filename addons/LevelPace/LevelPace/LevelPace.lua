@@ -105,12 +105,15 @@ end
 -- 상태
 ---------------------------------------------------------------------------
 local RECENT_WINDOW = 600   -- 최근 10분
+local LUMP_WINDOW = 3600    -- 퀘스트처럼 한 번에 크게 들어온 경험치를 나눠 반영하는 시간 (60분)
+local LUMP_MIN_SPAN = 1800  -- 접속한 지 얼마 안 됐어도 큰 덩어리는 최소 30분에 나눈다
+local LUMP_FACTOR = 4       -- 마지막 사냥 경험치의 이 배수를 넘으면 "한 번에 크게 들어온 경험치"로 본다
 local QUEST_MATCH_TIME = 3  -- 퀘스트 완료 후 이 시간 안에 들어온 경험치는 퀘스트로 분류
 local HISTORY_MAX = 20
 
 local db                    -- LevelPaceDB (캐릭터별 저장)
 local session
-local recent = {}           -- { {시각, 경험치}, ... }
+local recent = {}           -- { {시각, 경험치, 큰 덩어리 여부}, ... } 최근 60분
 local lastXP, lastMax, lastLevel
 local questPending, questPendingTime = 0, 0
 local levelTimeMark
@@ -186,23 +189,53 @@ local function SessionRate()
 	return session.xp / elapsed * 3600
 end
 
-local function RecentRate()
-	local now = GetTime()
-	while recent[1] and (now - recent[1][1]) > RECENT_WINDOW do
+local function PruneRecent(now)
+	while recent[1] and (now - recent[1][1]) > LUMP_WINDOW do
 		table.remove(recent, 1)
 	end
+end
+
+-- 최근 10분 동안 실제로 얻은 경험치의 시간당 속도 (상세 창 표시용)
+local function RecentRate()
+	local now = GetTime()
+	PruneRecent(now)
 	local span = math.min(RECENT_WINDOW, now - session.start)
 	if span < 60 then return nil end
 	local sum = 0
-	for _, g in ipairs(recent) do sum = sum + g[2] end
+	for _, g in ipairs(recent) do
+		if (now - g[1]) <= RECENT_WINDOW then sum = sum + g[2] end
+	end
 	if sum <= 0 then return nil end
 	return sum / span * 3600
 end
 
--- 바와 레벨업 예상에 쓰는 속도: 최근 10분 우선, 없으면 세션 평균
-local function BestRate()
-	return RecentRate() or SessionRate()
+-- 바와 레벨업 예상에 쓰는 속도.
+-- 사냥처럼 꾸준히 들어오는 경험치는 최근 10분으로, 퀘스트 완료처럼 한 번에 크게 들어오는 경험치는
+-- 최근 60분에 나눠서 더한다. 이렇게 해야 퀘스트를 하나 깼다고 예상 시간이 갑자기 줄었다가
+-- 10분 뒤에 다시 늘어나는 일이 없다.
+local function PaceRate()
+	local now = GetTime()
+	PruneRecent(now)
+	local elapsed = now - session.start
+	if elapsed < 60 then return nil end
+	local steady, lump = 0, 0
+	for _, g in ipairs(recent) do
+		if g[3] then
+			lump = lump + g[2]
+		elseif (now - g[1]) <= RECENT_WINDOW then
+			steady = steady + g[2]
+		end
+	end
+	local rate = steady / math.min(RECENT_WINDOW, elapsed)
+		+ lump / math.max(LUMP_MIN_SPAN, math.min(LUMP_WINDOW, elapsed))
+	if rate <= 0 then return nil end
+	return rate * 3600
 end
+
+local function BestRate()
+	return PaceRate() or SessionRate()
+end
+
 
 ---------------------------------------------------------------------------
 -- 정보 바
@@ -374,7 +407,7 @@ local function UpdateWindow()
 	local maxed = AtMaxLevel()
 	local cur, max = ReadXP()
 	local sRate, rRate = SessionRate(), RecentRate()
-	local rate = rRate or sRate
+	local rate = BestRate()
 
 	if maxed or not cur or max <= 0 then
 		rows.ROW_LEVEL:SetText(L.LEVEL:format(level) .. (maxed and ("  ·  " .. L.MAX_LEVEL) or ""))
@@ -448,10 +481,11 @@ ResetSession = function()
 	Refresh()
 end
 
-local function ClassifyGain(delta)
+local function ClassifyGain(delta, entry)
 	if questPending > 0 and (GetTime() - questPendingTime) <= QUEST_MATCH_TIME then
 		session.questXP = session.questXP + delta
 		questPending = math.max(0, questPending - delta)
+		entry[3] = true -- 퀘스트 경험치는 큰 덩어리로 나눠 반영
 	else
 		session.killXP = session.killXP + delta
 		session.lastKillXP = delta
@@ -462,9 +496,12 @@ end
 
 local function AddGain(delta)
 	session.xp = session.xp + delta
-	recent[#recent + 1] = { GetTime(), delta }
+	-- 평소 사냥보다 훨씬 큰 경험치(탐험, 보스 등)도 큰 덩어리로 본다
+	local big = session.lastKillXP and delta > session.lastKillXP * LUMP_FACTOR or false
+	local entry = { GetTime(), delta, big }
+	recent[#recent + 1] = entry
 	-- 퀘스트 완료 이벤트가 경험치 이벤트보다 늦게 올 수 있어서 잠깐 기다렸다 분류
-	C_Timer.After(0.5, function() ClassifyGain(delta) end)
+	C_Timer.After(0.5, function() ClassifyGain(delta, entry) end)
 end
 
 local function OnXPUpdate()
