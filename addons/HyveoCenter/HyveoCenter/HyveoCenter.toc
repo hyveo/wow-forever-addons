@@ -1,7 +1,16 @@
 ## Interface: 16002, 16001
-## Title: hyveo 애드온 센터 (HyveoCenter)
-## Notes: hyveo가 만든 애드온(레벨페이스, 센터바)을 한 창에서 켜고 끄고 설정해요.
-## Notes-enUS: Manage hyveo's addons (LevelPace, CenterBar) in one window.
+## Title: hyveo Addon Center (HyveoCenter)
+## Title-koKR: hyveo 애드온 센터 (HyveoCenter)
+## Notes: Manage hyveo's addons (LevelPace, CenterBar) in one window.
+## Notes-koKR: hyveo가 만든 애드온(레벨페이스, 센터바)을 한 창에서 켜고 끄고 설정해요.
+## Notes-deDE: Verwalte die Addons von hyveo (LevelPace, CenterBar) in einem Fenster.
+## Notes-esES: Gestiona los addons de hyveo (LevelPace, CenterBar) en una sola ventana.
+## Notes-esMX: Gestiona los addons de hyveo (LevelPace, CenterBar) en una sola ventana.
+## Notes-frFR: Gérez les addons de hyveo (LevelPace, CenterBar) dans une seule fenêtre.
+## Notes-ptBR: Gerencie os addons da hyveo (LevelPace, CenterBar) em uma janela.
+## Notes-ruRU: Управляйте аддонами hyveo (LevelPace, CenterBar) в одном окне.
+## Notes-zhCN: 在一个窗口中管理 hyveo 的插件（LevelPace、CenterBar）。
+## Notes-zhTW: 在一個視窗中管理 hyveo 的插件（LevelPace、CenterBar）。
 ## Author: hyveo
 ## Version: @project-version@
 ## SavedVariables: HyveoCenterDB
@@ -14,4 +23,5 @@
 ## X-Website: https://github.com/hyveo/wow-forever-addons
 ## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
 
+Locales.lua
 HyveoCenter.lua

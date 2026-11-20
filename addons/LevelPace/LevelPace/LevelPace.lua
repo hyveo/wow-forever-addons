@@ -1,113 +1,12 @@
 -- 레벨페이스 (LevelPace) — 와우 포에버용 레벨링 도우미
 -- 만든 사람: @hyveo  /  https://github.com/hyveo/wow-forever-addons
 
-local ADDON_NAME = ...
+local ADDON_NAME, ns = ...
 
 ---------------------------------------------------------------------------
 -- 문자열
 ---------------------------------------------------------------------------
-local L
-if GetLocale() == "koKR" then
-	L = {
-		TITLE        = "레벨페이스",
-		LEVEL        = "Lv %d",
-		MAX_LEVEL    = "최대 레벨",
-		PER_HOUR     = "%s/시간",
-		TO_LEVEL     = "레벨업까지 %s",
-		CALCULATING  = "계산 중…",
-		NONE         = "없음",
-		TIME_HM      = "%d시간 %d분",
-		TIME_M       = "%d분",
-		TIME_LT1M    = "1분 미만",
-		MOBS         = "약 %s마리 (마지막 %s XP 기준)",
-
-		ROW_LEVEL    = "현재 경험치",
-		ROW_REMAIN   = "남은 경험치",
-		ROW_RESTED   = "휴식 경험치",
-		ROW_SESSION  = "세션 시간",
-		ROW_GAINED   = "세션 획득",
-		ROW_RATE_S   = "시간당 (세션 평균)",
-		ROW_RATE_R   = "시간당 (최근 10분)",
-		ROW_ETA      = "레벨업 예상",
-		ROW_SOURCES  = "퀘스트 / 사냥·기타",
-		ROW_MOBS     = "남은 사냥 수",
-		ROW_LVTIME   = "이번 레벨 진행 시간",
-		HISTORY      = "레벨업 기록",
-		HISTORY_LINE = "%d → %d레벨: %s  (%s)",
-		HISTORY_NONE = "아직 기록이 없어요.",
-
-		BTN_RESET    = "세션 초기화",
-		BTN_LOCK     = "바 잠금",
-		BTN_UNLOCK   = "바 잠금 해제",
-		BTN_HIDE     = "바 숨기기",
-		BTN_SHOW     = "바 보이기",
-
-		TIP_DRAG     = "드래그: 위치 이동",
-		TIP_LOCKED   = "바가 잠겨 있어요 (/lp 잠금)",
-		TIP_CLICK    = "우클릭: 상세 창 열기",
-
-		MSG_RESET    = "세션 기록을 초기화했어요.",
-		MSG_LOCKED   = "바를 잠갔어요.",
-		MSG_UNLOCKED = "바 잠금을 풀었어요. 드래그해서 옮길 수 있어요.",
-		MSG_HELP     = "/lp — 상세 창  |  /lp 바 — 바 보이기/숨기기  |  /lp 잠금 — 바 잠금/해제  |  /lp 초기화 — 세션 초기화  |  /lp 미니맵 — 미니맵 버튼 보이기/숨기기",
-		MM_LEFT      = "왼쪽 클릭: 상세 창",
-		MM_RIGHT     = "오른쪽 클릭: 정보 바 보이기/숨기기",
-		MM_DRAG      = "드래그: 버튼 옮기기",
-		MM_HIDE      = "/lp 미니맵: 이 버튼 숨기기",
-		MSG_MM_ON    = "미니맵 버튼을 켰어요.",
-		MSG_MM_OFF   = "미니맵 버튼을 숨겼어요. 다시 켜려면 /lp 미니맵",
-	}
-else
-	L = {
-		TITLE        = "LevelPace",
-		LEVEL        = "Lv %d",
-		MAX_LEVEL    = "Max level",
-		PER_HOUR     = "%s/h",
-		TO_LEVEL     = "Level in %s",
-		CALCULATING  = "Calculating…",
-		NONE         = "None",
-		TIME_HM      = "%dh %dm",
-		TIME_M       = "%dm",
-		TIME_LT1M    = "<1m",
-		MOBS         = "~%s kills (last kill %s XP)",
-
-		ROW_LEVEL    = "Current XP",
-		ROW_REMAIN   = "XP to level",
-		ROW_RESTED   = "Rested XP",
-		ROW_SESSION  = "Session time",
-		ROW_GAINED   = "Session XP",
-		ROW_RATE_S   = "XP/h (session)",
-		ROW_RATE_R   = "XP/h (last 10 min)",
-		ROW_ETA      = "Time to level",
-		ROW_SOURCES  = "Quest / Kills & other",
-		ROW_MOBS     = "Kills to level",
-		ROW_LVTIME   = "Time at this level",
-		HISTORY      = "Level history",
-		HISTORY_LINE = "%d → %d: %s  (%s)",
-		HISTORY_NONE = "No level-ups recorded yet.",
-
-		BTN_RESET    = "Reset session",
-		BTN_LOCK     = "Lock bar",
-		BTN_UNLOCK   = "Unlock bar",
-		BTN_HIDE     = "Hide bar",
-		BTN_SHOW     = "Show bar",
-
-		TIP_DRAG     = "Drag to move",
-		TIP_LOCKED   = "Bar is locked (/lp lock)",
-		TIP_CLICK    = "Right-click: open details",
-
-		MSG_RESET    = "Session reset.",
-		MSG_LOCKED   = "Bar locked.",
-		MSG_UNLOCKED = "Bar unlocked. Drag it to move.",
-		MSG_HELP     = "/lp — details  |  /lp bar — show/hide bar  |  /lp lock — lock/unlock bar  |  /lp reset — reset session  |  /lp minimap — show/hide minimap button",
-		MM_LEFT      = "Left-click: details",
-		MM_RIGHT     = "Right-click: show/hide the info bar",
-		MM_DRAG      = "Drag: move this button",
-		MM_HIDE      = "/lp minimap: hide this button",
-		MSG_MM_ON    = "Minimap button shown.",
-		MSG_MM_OFF   = "Minimap button hidden. Use /lp minimap to show it again.",
-	}
-end
+local L = ns.L -- 문자열은 Locales.lua (언어를 바꾸면 이 표의 내용이 바뀜)
 
 local function Print(msg)
 	print("|cff66ccff" .. L.TITLE .. "|r: " .. msg)
@@ -367,6 +266,7 @@ win.title:SetPoint("TOP", 0, -6)
 win.title:SetText(L.TITLE)
 
 local rows = {}
+local rowLabels = {} -- 언어를 바꾸면 다시 쓰려고 보관
 local ROW_KEYS = {
 	"ROW_LEVEL", "ROW_REMAIN", "ROW_RESTED",
 	"ROW_SESSION", "ROW_GAINED", "ROW_RATE_S", "ROW_RATE_R", "ROW_ETA",
@@ -377,6 +277,7 @@ for i, key in ipairs(ROW_KEYS) do
 	local label = win:CreateFontString(nil, "OVERLAY", "GameFontNormal")
 	label:SetPoint("TOPLEFT", 18, y)
 	label:SetText(L[key])
+	rowLabels[key] = label
 	local value = win:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
 	value:SetPoint("TOPRIGHT", -18, y)
 	value:SetJustifyH("RIGHT")
@@ -409,6 +310,14 @@ local SetBarLocked, SetBarShown, ResetSession
 win.resetBtn = MakeButton(L.BTN_RESET, 14, function() ResetSession() end)
 win.lockBtn  = MakeButton(L.BTN_LOCK, 128, function() SetBarLocked(not db.bar.locked) end)
 win.showBtn  = MakeButton(L.BTN_HIDE, 242, function() SetBarShown(not db.bar.shown) end)
+
+-- hyveo 애드온 센터에서 고른 언어를 접속할 때 적용하고, 미리 만들어 둔 글자를 다시 쓴다
+local function ApplyTexts()
+	win.title:SetText(L.TITLE)
+	for key, label in pairs(rowLabels) do label:SetText(L[key]) end
+	win.historyTitle:SetText(L.HISTORY)
+	win.resetBtn:SetText(L.BTN_RESET)
+end
 
 local function UpdateWindow()
 	if not win:IsShown() then return end
@@ -564,6 +473,7 @@ end
 ---------------------------------------------------------------------------
 local events = CreateFrame("Frame")
 events:RegisterEvent("ADDON_LOADED")
+events:RegisterEvent("PLAYER_LOGIN")
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 events:RegisterEvent("PLAYER_XP_UPDATE")
 events:RegisterEvent("PLAYER_LEVEL_UP")
@@ -583,6 +493,14 @@ events:SetScript("OnEvent", function(_, event, ...)
 		db.levelTime = db.levelTime or 0
 		ApplyBarPosition()
 		UpdateMinimapButton()
+
+	elseif event == "PLAYER_LOGIN" then
+		-- 모든 애드온이 읽힌 뒤라 애드온 센터의 언어 설정을 볼 수 있다 (없으면 게임 언어)
+		local lang = HyveoCenter_GetLanguage and HyveoCenter_GetLanguage()
+		if lang then
+			ns.ApplyLocale(lang)
+			ApplyTexts()
+		end
 
 	elseif event == "PLAYER_ENTERING_WORLD" then
 		if initialized then return end

@@ -2,95 +2,14 @@
 -- hyveo가 만든 애드온을 한 창에서 켜고 끄고, 열고, 자주 쓰는 설정을 바꾼다.
 -- 만든 사람: @hyveo  /  https://github.com/hyveo/wow-forever-addons
 
-local ADDON_NAME = ...
+local ADDON_NAME, ns = ...
 local REPO_URL   = "https://github.com/hyveo/wow-forever-addons"
 local ISSUE_URL  = REPO_URL .. "/issues"
 
 ---------------------------------------------------------------------------
 -- 문자열
 ---------------------------------------------------------------------------
-local L
-if GetLocale() == "koKR" then
-	L = {
-		TITLE         = "hyveo 애드온 센터",
-		VERSION       = "버전 %s",
-		ON            = "켜짐",
-		OFF           = "꺼짐",
-		ON_AFTER      = "다시 불러오면 켜짐",
-		OFF_AFTER     = "다시 불러오면 꺼짐",
-		MISSING       = "설치 안 됨",
-		BTN_OPEN      = "창 열기",
-		BTN_ENABLE    = "켜기",
-		BTN_DISABLE   = "끄기",
-		BTN_GETLINK   = "받는 곳 주소 복사",
-		BTN_RELOAD    = "지금 다시 불러오기",
-		BTN_BUG       = "버그 제보 주소 복사",
-		RELOAD_MSG    = "바꾼 설정은 UI를 다시 불러와야 적용돼요.",
-		QUICK         = "빠른 설정",
-		QUICK_NONE    = "애드온이 켜져 있을 때 설정할 수 있어요.",
-		FOOTER        = "/hv 로도 열 수 있어요",
-		COPY_TITLE    = "Ctrl+C로 복사하세요",
-		SIDE_NOTE     = "새 애드온 소식과 요청은\nGitHub: hyveo/wow-forever-addons",
-		OPEN_CENTER   = "센터 열기",
-		PANEL_DESC    = "hyveo가 만든 애드온을 한 창에서 관리해요.",
-		MISSING_DESC  = "이 애드온은 아직 설치되지 않았어요. CurseForge 앱이나 GitHub에서 받을 수 있어요.",
-		HELP_HEAD     = "명령어 목록",
-		HELP_CENTER   = "/hv — 센터 열기/닫기",
-		HELP_LINE     = "/hv %s — %s 열기 (원래 명령어: %s)",
-		HELP_HELP     = "/hv help — 이 목록 보기",
-		NOT_READY     = "%s이(가) 설치되어 있지 않거나 꺼져 있어요.",
-		UNKNOWN       = "모르는 명령어예요: %s  (/hv help)",
-
-		LP_NAME       = "레벨페이스",
-		LP_DESC       = "시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미예요.",
-		LP_BAR        = "정보 바 보이기",
-		LP_LOCK       = "정보 바 잠금",
-		CB_NAME       = "센터바",
-		CB_DESC       = "캐릭터 양옆에 액션 버튼을 최대 18개 놓아주는 애드온이에요.",
-		CB_COMBAT     = "전투 중에만 보이기",
-		CB_MOUSE      = "마우스를 올렸을 때만 보이기",
-	}
-else
-	L = {
-		TITLE         = "hyveo Addon Center",
-		VERSION       = "Version %s",
-		ON            = "On",
-		OFF           = "Off",
-		ON_AFTER      = "On after reload",
-		OFF_AFTER     = "Off after reload",
-		MISSING       = "Not installed",
-		BTN_OPEN      = "Open",
-		BTN_ENABLE    = "Enable",
-		BTN_DISABLE   = "Disable",
-		BTN_GETLINK   = "Copy download link",
-		BTN_RELOAD    = "Reload UI now",
-		BTN_BUG       = "Copy bug report link",
-		RELOAD_MSG    = "Reload the UI to apply your changes.",
-		QUICK         = "Quick settings",
-		QUICK_NONE    = "Available while the addon is enabled.",
-		FOOTER        = "You can also open this with /hv",
-		COPY_TITLE    = "Press Ctrl+C to copy",
-		SIDE_NOTE     = "News and requests:\nGitHub: hyveo/wow-forever-addons",
-		OPEN_CENTER   = "Open center",
-		PANEL_DESC    = "Manage hyveo's addons in one window.",
-		MISSING_DESC  = "This addon is not installed yet. Get it from the CurseForge app or GitHub.",
-		HELP_HEAD     = "Commands",
-		HELP_CENTER   = "/hv — toggle the center",
-		HELP_LINE     = "/hv %s — open %s (also: %s)",
-		HELP_HELP     = "/hv help — show this list",
-		NOT_READY     = "%s is not installed or is disabled.",
-		UNKNOWN       = "Unknown command: %s  (/hv help)",
-
-		LP_NAME       = "LevelPace",
-		LP_DESC       = "Leveling helper: XP per hour and time to next level.",
-		LP_BAR        = "Show info bar",
-		LP_LOCK       = "Lock info bar",
-		CB_NAME       = "CenterBar",
-		CB_DESC       = "Up to 18 action buttons around your character.",
-		CB_COMBAT     = "Show only in combat",
-		CB_MOUSE      = "Show only on mouseover",
-	}
-end
+local L = ns.L -- 문자열은 Locales.lua (언어를 바꾸면 이 표의 내용이 바뀜)
 
 local function Print(msg)
 	print("|cffffd100" .. L.TITLE .. "|r: " .. msg)
@@ -302,6 +221,88 @@ list.note:SetPoint("RIGHT", -10, 0)
 list.note:SetJustifyH("LEFT")
 list.note:SetText(L.SIDE_NOTE)
 
+-- 언어: 여기서 고른 언어를 센터바·레벨페이스도 따라간다 (HyveoCenter_GetLanguage).
+-- 바꾸면 UI를 다시 불러와야 적용된다.
+local function CurrentLang() return (HyveoCenterDB and HyveoCenterDB.lang) or "auto" end
+local function LangLabel(code)
+	if code == "auto" then return L.LANG_AUTO:format(ns.GameLocale()) end
+	return ns.LANG_NAMES[code] or code
+end
+
+StaticPopupDialogs["HYVEOCENTER_LANGUAGE"] = {
+	text = "%s",
+	button1 = L.RELOAD_NOW,
+	button2 = L.LATER,
+	OnAccept = function() ReloadUI() end,
+	timeout = 0,
+	whileDead = true,
+	hideOnEscape = true,
+	preferredIndex = 3,
+}
+
+list.langLabel = list:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+list.langLabel:SetPoint("TOPLEFT", 10, -8 - #ADDONS * 58 - 10)
+list.langLabel:SetPoint("RIGHT", -10, 0)
+list.langLabel:SetJustifyH("LEFT")
+
+local langBtn = CreateFrame("Button", nil, list, "UIPanelButtonTemplate")
+langBtn:SetSize(194, 22)
+langBtn:SetPoint("TOPLEFT", list.langLabel, "BOTTOMLEFT", -2, -4)
+
+local langList = CreateFrame("Frame", nil, langBtn, "BackdropTemplate")
+langList:SetFrameStrata("FULLSCREEN_DIALOG")
+langList:SetClampedToScreen(true)
+langList:SetPoint("TOPLEFT", langBtn, "BOTTOMLEFT", 0, -2)
+langList:SetBackdrop({ bgFile = "Interface\\Buttons\\WHITE8X8", edgeFile = "Interface\\Buttons\\WHITE8X8", edgeSize = 1 })
+langList:SetBackdropColor(0.05, 0.05, 0.05, 0.95)
+langList:SetBackdropBorderColor(0.6, 0.5, 0.3, 1)
+langList:EnableMouse(true)
+langList:Hide()
+
+local langCodes = { "auto" }
+for _, c in ipairs(ns.LANGS) do langCodes[#langCodes + 1] = c end
+local langRows = {}
+local LROW = 20
+for i, code in ipairs(langCodes) do
+	local r = CreateFrame("Button", nil, langList)
+	r:SetSize(220, LROW)
+	r:SetPoint("TOPLEFT", 4, -4 - (i - 1) * LROW - (i > 1 and 6 or 0))
+	r.hl = r:CreateTexture(nil, "HIGHLIGHT")
+	r.hl:SetAllPoints()
+	r.hl:SetColorTexture(1, 0.82, 0, 0.15)
+	r.check = r:CreateTexture(nil, "OVERLAY") -- 지금 고른 언어 표시
+	r.check:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+	r.check:SetSize(16, 16)
+	r.check:SetPoint("LEFT", 4, 0)
+	r.text = r:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+	r.text:SetPoint("LEFT", 24, 0)
+	r:SetScript("OnClick", function()
+		langList:Hide()
+		if code == CurrentLang() then return end
+		HyveoCenterDB = HyveoCenterDB or {}
+		HyveoCenterDB.lang = (code ~= "auto") and code or nil
+		langBtn:SetText(LangLabel(code))
+		StaticPopup_Show("HYVEOCENTER_LANGUAGE", L.LANG_ASK:format(LangLabel(code)) .. "\n" .. L.LANG_RELOAD)
+	end)
+	langRows[i] = r
+end
+local langSep = langList:CreateTexture(nil, "ARTWORK") -- 자동과 언어 목록 사이 구분선
+langSep:SetColorTexture(0.6, 0.5, 0.3, 0.6)
+langSep:SetHeight(1)
+langSep:SetPoint("TOPLEFT", 8, -4 - LROW - 3)
+langSep:SetPoint("TOPRIGHT", -8, -4 - LROW - 3)
+langList:SetSize(228, 8 + #langCodes * LROW + 6)
+langBtn:SetScript("OnClick", function() langList:SetShown(not langList:IsShown()) end)
+
+local function RefreshLang()
+	local cur = CurrentLang()
+	langBtn:SetText(LangLabel(cur))
+	for i, code in ipairs(langCodes) do
+		langRows[i].text:SetText(LangLabel(code))
+		langRows[i].check:SetShown(code == cur)
+	end
+end
+
 -- 오른쪽 상세
 local d = CreateFrame("Frame", nil, f, "BackdropTemplate")
 d:SetPoint("TOPLEFT", list, "TOPRIGHT", 10, 0)
@@ -407,6 +408,35 @@ d.bugBtn:SetPoint("BOTTOMRIGHT", -12, 10)
 d.bugBtn:SetText(L.BTN_BUG)
 d.bugBtn:SetScript("OnClick", function() ShowCopy(ISSUE_URL) end)
 
+-- 언어를 바꾼 뒤(접속 시 저장된 언어 적용) 미리 만들어 둔 글자를 다시 쓴다
+local function ApplyTexts()
+	local texts = {
+		{ ADDONS[1], "LP_NAME", "LP_DESC", "LP_BAR", "LP_LOCK" },
+		{ ADDONS[2], "CB_NAME", "CB_DESC", "CB_COMBAT", "CB_MOUSE" },
+	}
+	for _, t in ipairs(texts) do
+		local a = t[1]
+		a.name, a.desc = L[t[2]], L[t[3]]
+		a.options[1].label, a.options[2].label = L[t[4]], L[t[5]]
+	end
+	for i, a in ipairs(ADDONS) do rows[i].name:SetText(a.name) end
+	f.title:SetText(L.TITLE)
+	list.note:SetText(L.SIDE_NOTE)
+	list.langLabel:SetText(L.LANG)
+	d.openBtn:SetText(L.BTN_OPEN)
+	d.linkBtn:SetText(L.BTN_GETLINK)
+	d.reload.text:SetText(L.RELOAD_MSG)
+	d.reload.btn:SetText(L.BTN_RELOAD)
+	d.quick:SetText(L.QUICK)
+	d.quickNone:SetText(L.QUICK_NONE)
+	d.footer:SetText(L.FOOTER)
+	d.bugBtn:SetText(L.BTN_BUG)
+	StaticPopupDialogs["HYVEOCENTER_LANGUAGE"].button1 = L.RELOAD_NOW
+	StaticPopupDialogs["HYVEOCENTER_LANGUAGE"].button2 = L.LATER
+	RefreshLang()
+end
+ApplyTexts()
+
 Refresh = function()
 	for i, a in ipairs(ADDONS) do
 		local b = rows[i]
@@ -461,7 +491,8 @@ Refresh = function()
 	end
 end
 
-f:SetScript("OnShow", Refresh)
+f:SetScript("OnShow", function() RefreshLang() Refresh() end)
+f:HookScript("OnHide", function() langList:Hide() end)
 
 local function Toggle()
 	if f:IsShown() then f:Hide() else f:Show() end
@@ -553,7 +584,6 @@ end
 ---------------------------------------------------------------------------
 -- 미니맵 버튼: 클릭 = 센터 열기, 드래그 = 미니맵 둘레를 따라 옮기기, /hv minimap = 보이기/숨기기
 ---------------------------------------------------------------------------
-local KO = GetLocale() == "koKR"
 local mm = CreateFrame("Button", "HyveoCenterMinimapButton", Minimap)
 mm:SetSize(31, 31)
 mm:SetFrameStrata("MEDIUM")
@@ -601,9 +631,9 @@ mm:SetScript("OnDragStop", function(self) self:SetScript("OnUpdate", nil) end)
 mm:SetScript("OnEnter", function(self)
 	GameTooltip:SetOwner(self, "ANCHOR_LEFT")
 	GameTooltip:AddLine(L.TITLE)
-	GameTooltip:AddLine(KO and "클릭: 애드온 센터 열기" or "Click: open the addon center", 1, 1, 1)
-	GameTooltip:AddLine(KO and "드래그: 버튼 옮기기" or "Drag: move this button", 1, 1, 1)
-	GameTooltip:AddLine(KO and "/hv minimap: 이 버튼 숨기기" or "/hv minimap: hide this button", 0.6, 0.6, 0.6)
+	GameTooltip:AddLine(L.MM_CLICK, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_DRAG, 1, 1, 1)
+	GameTooltip:AddLine(L.MM_HIDE, 0.6, 0.6, 0.6)
 	GameTooltip:Show()
 end)
 mm:SetScript("OnLeave", function() GameTooltip:Hide() end)
@@ -614,11 +644,21 @@ function HyveoCenter_ToggleMinimapButton()
 	UpdateMinimap()
 end
 
+-- 다른 hyveo 애드온(센터바, 레벨페이스)이 접속할 때(PLAYER_LOGIN) 불러서 같은 언어를 쓴다.
+-- 돌려주는 값: 언어 코드(예: "deDE") 또는 nil(= 게임 언어)
+function HyveoCenter_GetLanguage()
+	return HyveoCenterDB and HyveoCenterDB.lang or nil
+end
+
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("ADDON_LOADED")
 ev:SetScript("OnEvent", function(_, _, name)
 	if name == ADDON_NAME then
 		HyveoCenterDB = HyveoCenterDB or {}
+		if HyveoCenterDB.lang then
+			ns.ApplyLocale(HyveoCenterDB.lang)
+			ApplyTexts()
+		end
 		UpdateMinimap()
 		RegisterSettingsPanel()
 		ev:UnregisterEvent("ADDON_LOADED")

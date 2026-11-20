@@ -852,7 +852,7 @@ ev:RegisterEvent("PLAYER_REGEN_DISABLED")
 ev:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" then
 		if arg1 ~= ADDON_NAME then return end
-		-- 설정 창에서 고른 언어 (계정 공통). 없으면 게임 언어.
+		-- 설정 창에서 고른 언어 (계정 공통). 비어 있으면 PLAYER_LOGIN에서 애드온 센터 언어를 따른다.
 		CenterBarGlobalDB = CenterBarGlobalDB or {}
 		if CenterBarGlobalDB.lang then
 			ns.ApplyLocale(CenterBarGlobalDB.lang)
@@ -865,6 +865,13 @@ ev:SetScript("OnEvent", function(_, event, arg1)
 		Migrate()
 		EnsurePositions()
 	elseif event == "PLAYER_LOGIN" then
+		-- 모든 애드온이 읽힌 뒤: 언어를 따로 고르지 않았으면 hyveo 애드온 센터의 언어를 쓴다
+		local center = not CenterBarGlobalDB.lang and HyveoCenter_GetLanguage and HyveoCenter_GetLanguage()
+		if center then
+			ns.ApplyLocale(center)
+			handle.text:SetText(L.TITLE)
+			SetBindingNames()
+		end
 		UpdateMinimap()
 		ApplyAll()
 	elseif event == "PLAYER_ENTERING_WORLD" then
