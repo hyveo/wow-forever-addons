@@ -29,8 +29,16 @@ CurseForge에는 따로 올리지 않아도 됩니다.
 ```markdown
 ## 1.3.6 — 2026-11-20
 
+**English**
+
+- One line per change, written as the result
+
+**한국어**
+
 - 바뀐 점을 결과 중심으로 한 줄씩
 ```
+
+- **영어를 먼저, 한국어를 그다음에 적어요.** CurseForge와 GitHub 릴리즈에 이 순서 그대로 올라가요.
 
 - 항목이 없으면 설명이 빈 채로 올라가요.
 - TOC 파일의 버전은 고치지 않아도 돼요. `@project-version@` 자리에 태그의 버전이 자동으로 들어가요.

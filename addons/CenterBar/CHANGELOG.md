@@ -1,12 +1,31 @@
-# 변경 내역
+# Changelog · 변경 내역
+
+Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
 ## 1.4.1 — 2026-11-21
+
+**English**
+
+- Options window: in languages with long labels (German, for example), checkbox text now wraps instead of running outside the window. The window width is unchanged
+- Fixed the two help lines at the bottom overlapping, and added space between the help text and the bottom buttons
+- The bottom buttons (Reset, Close) are larger, and grow wider when their text is long
+
+**한국어**
 
 - 설정 창: 독일어처럼 문구가 긴 언어에서는 체크박스 글자가 줄바꿈돼서 창 밖으로 나가지 않아요 (창 너비는 그대로)
 - 설정 창 아래 도움말 두 줄이 겹치던 것 수정, 도움말과 아래 버튼 사이를 넓혔어요
 - 아래 버튼(처음으로·닫기)을 더 크고 넉넉하게, 글자가 길면 버튼도 넓어져요
 
 ## 1.4.0 — 2026-11-21
+
+**English**
+
+- Multi-language support: 한국어, English, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
+- Added a language picker at the bottom left of the options window. The default is "Auto" (follows the game language); a change applies after the UI reloads and is saved account-wide
+- Names and descriptions on the keybinding screen and in the addon list also use the chosen language
+- Text without a translation is shown in English
+
+**한국어**
 
 - 다국어 지원: 한국어, English, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文
 - 설정 창 왼쪽 아래에 언어 선택 추가. 기본값은 "자동"(게임 언어를 따라감)이고, 바꾸면 UI를 다시 불러온 뒤 적용돼요. 계정 전체에 저장돼요

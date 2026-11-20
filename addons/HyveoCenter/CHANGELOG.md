@@ -1,6 +1,14 @@
-# 변경 내역
+# Changelog · 변경 내역
+
+Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
 ## 0.2.0 — 2026-11-19
+
+**English**
+
+- Added a minimap button: click to open the addon center and jump to each addon's window from there (drag to move, `/hv minimap` to hide)
+
+**한국어**
 
 - 미니맵 버튼 추가: 클릭하면 애드온 센터가 열리고, 거기서 각 애드온 창으로 이동 (드래그로 위치 이동, `/hv minimap`으로 숨기기)
 
