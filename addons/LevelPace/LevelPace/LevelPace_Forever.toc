@@ -1,7 +1,16 @@
 ## Interface: 16002, 16001
-## Title: 레벨페이스 (LevelPace)
-## Notes: 시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미
-## Notes-enUS: Leveling helper: XP per hour and time to next level
+## Title: LevelPace
+## Title-koKR: 레벨페이스 (LevelPace)
+## Notes: Leveling helper: XP per hour and time to next level
+## Notes-koKR: 시간당 경험치와 레벨업까지 남은 시간을 보여주는 레벨링 도우미
+## Notes-deDE: Leveling-Helfer: EP pro Stunde und Zeit bis zum nächsten Level
+## Notes-esES: Ayuda para subir de nivel: PX por hora y tiempo hasta el siguiente nivel
+## Notes-esMX: Ayuda para subir de nivel: PX por hora y tiempo hasta el siguiente nivel
+## Notes-frFR: Aide à la montée de niveau : XP par heure et temps avant le prochain niveau
+## Notes-ptBR: Ajudante de nível: XP por hora e tempo até o próximo nível
+## Notes-ruRU: Помощник прокачки: опыт в час и время до следующего уровня
+## Notes-zhCN: 升级助手：每小时经验和升级所需时间
+## Notes-zhTW: 升級助手：每小時經驗與升級所需時間
 ## SavedVariablesPerCharacter: LevelPaceDB
 ## IconTexture: Interface\AddOns\LevelPace\icon
 ## Author: hyveo
@@ -10,4 +19,5 @@
 ## X-Website: https://github.com/hyveo/wow-forever-addons
 ## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
 
+Locales.lua
 LevelPace.lua

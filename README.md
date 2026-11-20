@@ -31,17 +31,17 @@ All three are **available on CurseForge.** Screenshots and details are also at [
 |---|---|:-:|:-:|:-:|
 | English | enUS / enGB | ✅ | ✅ | ✅ |
 | 한국어 (Korean) | koKR | ✅ | ✅ | ✅ |
-| Deutsch (German) | deDE | ✅ | – | – |
-| Español — América Latina | esMX | ✅ | – | – |
-| Español — España | esES | ✅ | – | – |
-| Français (French) | frFR | ✅ | – | – |
-| Português (Portuguese) | ptBR | ✅ | – | – |
-| Русский (Russian) | ruRU | ✅ | – | – |
-| 简体中文 (Simplified Chinese) | zhCN | ✅ | – | – |
-| 繁體中文 (Traditional Chinese) | zhTW | ✅ | – | – |
+| Deutsch (German) | deDE | ✅ | ✅ | ✅ |
+| Español — América Latina | esMX | ✅ | ✅ | ✅ |
+| Español — España | esES | ✅ | ✅ | ✅ |
+| Français (French) | frFR | ✅ | ✅ | ✅ |
+| Português (Portuguese) | ptBR | ✅ | ✅ | ✅ |
+| Русский (Russian) | ruRU | ✅ | ✅ | ✅ |
+| 简体中文 (Simplified Chinese) | zhCN | ✅ | ✅ | ✅ |
+| 繁體中文 (Traditional Chinese) | zhTW | ✅ | ✅ | ✅ |
 
-- The addons follow your game language automatically. CenterBar also lets you pick a language in its options window.
-- In a language without a translation, LevelPace and HyveoCenter show English.
+- By default the addons follow your game language. Pick a language in hyveo Addon Center (`/hv`) and CenterBar and LevelPace use it too. CenterBar can also have its own language in its options window.
+- Text without a translation is shown in English.
 - Found a wrong or awkward translation? Please open an [issue](../../issues).
 
 ## Addon requests welcome
@@ -147,17 +147,17 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 |---|---|:-:|:-:|:-:|
 | English (영어) | enUS / enGB | ✅ | ✅ | ✅ |
 | 한국어 | koKR | ✅ | ✅ | ✅ |
-| Deutsch (독일어) | deDE | ✅ | – | – |
-| Español — América Latina (스페인어, 중남미) | esMX | ✅ | – | – |
-| Español — España (스페인어, 스페인) | esES | ✅ | – | – |
-| Français (프랑스어) | frFR | ✅ | – | – |
-| Português (포르투갈어) | ptBR | ✅ | – | – |
-| Русский (러시아어) | ruRU | ✅ | – | – |
-| 简体中文 (중국어 간체) | zhCN | ✅ | – | – |
-| 繁體中文 (중국어 번체) | zhTW | ✅ | – | – |
+| Deutsch (독일어) | deDE | ✅ | ✅ | ✅ |
+| Español — América Latina (스페인어, 중남미) | esMX | ✅ | ✅ | ✅ |
+| Español — España (스페인어, 스페인) | esES | ✅ | ✅ | ✅ |
+| Français (프랑스어) | frFR | ✅ | ✅ | ✅ |
+| Português (포르투갈어) | ptBR | ✅ | ✅ | ✅ |
+| Русский (러시아어) | ruRU | ✅ | ✅ | ✅ |
+| 简体中文 (중국어 간체) | zhCN | ✅ | ✅ | ✅ |
+| 繁體中文 (중국어 번체) | zhTW | ✅ | ✅ | ✅ |
 
-- 게임 언어를 자동으로 따라가요. 센터바는 설정 창에서 언어를 직접 고를 수도 있어요.
-- 번역이 없는 언어에서는 레벨페이스와 애드온 센터가 영어로 나와요.
+- 기본은 게임 언어를 따라가요. hyveo 애드온 센터(`/hv`)에서 언어를 고르면 센터바·레벨페이스도 같은 언어를 써요. 센터바는 설정 창에서 따로 고를 수도 있어요.
+- 번역이 없는 문구는 영어로 보여요.
 - 번역이 틀리거나 어색하면 [이슈](../../issues)로 알려 주세요.
 
 ## 애드온 요청 받습니다

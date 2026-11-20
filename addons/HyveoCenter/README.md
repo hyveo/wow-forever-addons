@@ -42,6 +42,14 @@ hyveo 애드온은 `/hv` 하나로 다 열 수 있어요. 각 애드온의 원�
 | 미니맵 옆 애드온 메뉴 | 목록에서 **hyveo 애드온 센터** 클릭 |
 | 게임 설정 | ESC → 설정 → 애드온 → hyveo 애드온 센터 → [센터 열기] |
 
+## 언어
+
+English, 한국어, Deutsch, Español (América Latina / España), Français, Português, Русский, 简体中文, 繁體中文를 지원해요. 센터 왼쪽의 **언어**에서 고르면 센터바·레벨페이스도 같은 언어를 써요 (기본값은 "자동" = 게임 언어, 바꾸면 UI 다시 불러오기).
+
+Spotted a bad translation? Please open a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). Strings live in `HyveoCenter/Locales.lua`.
+
+번역이 어색하거나 틀린 곳은 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)로 알려 주세요.
+
 ## 알아두기
 
 - 게임 안에서 새 애드온을 내려받을 수는 없습니다 (와우 애드온은 인터넷에 접속할 수 없음). 설치는 CurseForge 앱이나 [Releases](../../releases)에서 하세요.

@@ -2,6 +2,20 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## 1.5.0 — 2026-11-21
+
+**English**
+
+- The language picker has a new default, "Follow addon center": CenterBar uses the language chosen in hyveo Addon Center
+- You can still pick "Auto" (game language) or a specific language just for CenterBar
+- Without the addon center installed, it works as before (default is the game language)
+
+**한국어**
+
+- 언어 선택에 새 기본값 "애드온 센터 따름" 추가: hyveo 애드온 센터에서 고른 언어를 센터바도 따라가요
+- 센터바만 따로 "자동"(게임 언어)이나 특정 언어로 고를 수도 있어요
+- 애드온 센터가 없으면 예전처럼 게임 언어가 기본이에요
+
 ## 1.4.1 — 2026-11-21
 
 **English**
