@@ -1,10 +1,25 @@
-# 변경 내역
+# Changelog · 변경 내역
+
+Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
 ## 1.0.3 — 2026-11-20
+
+**English**
+
+- Added a minimap button: left-click opens the details window, right-click shows or hides the info bar, drag to move it (`/lp minimap` hides the button)
+
+**한국어**
 
 - 미니맵 버튼 추가: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그로 위치 이동 (`/lp 미니맵`으로 숨기기)
 
 ## 1.0.2 — 2026-11-20
+
+**English**
+
+- Fixed "time to level" suddenly dropping and then climbing back after a quest turn-in or any large one-time XP gain
+- Steady XP from kills is measured over the last 10 minutes; large one-time gains such as quest rewards are spread over the last 60 minutes
+
+**한국어**
 
 - 퀘스트를 완료하거나 경험치가 한 번에 크게 들어왔을 때 "레벨업까지" 시간이 갑자기 줄었다가 다시 늘어나던 문제 수정
 - 꾸준히 들어오는 사냥 경험치는 최근 10분으로, 퀘스트처럼 한 번에 크게 들어오는 경험치는 최근 60분에 나눠서 계산
