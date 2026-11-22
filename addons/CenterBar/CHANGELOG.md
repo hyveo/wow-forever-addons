@@ -2,6 +2,16 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## Unreleased · 릴리즈 전
+
+**English**
+
+- Spells placed on CenterBar no longer keep glowing as "not on an action bar" in the spellbook
+
+**한국어**
+
+- 센터바에 올린 주문이 마법책에서 "단축바에 없음"으로 계속 반짝이던 것을 멈췄어요
+
 ## 1.5.0 — 2026-11-21
 
 **English**
