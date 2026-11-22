@@ -154,10 +154,12 @@ local function Content(i, slot)
 	return set and set[i]
 end
 
+local RefreshSpellBookGlow -- 아래에서 채움
 local function SetContent(i, c, slot)
 	slot = slot or CurrentSlot()
 	db.sets[slot] = db.sets[slot] or {}
 	db.sets[slot][i] = c
+	if RefreshSpellBookGlow then RefreshSpellBookGlow() end
 end
 
 -- 표시 개수 6/12/18: 양쪽에서 캐릭터와 가까운 열부터 보인다
@@ -839,6 +841,90 @@ end)
 ---------------------------------------------------------------------------
 -- 이벤트
 ---------------------------------------------------------------------------
+-- 마법책의 "단축바에 없음" 반짝임 끄기 -----------------------------------------
+-- 게임은 자기 단축바 칸만 세기 때문에, 센터바에만 올린 주문은 마법책에서 계속 반짝인다.
+-- 센터바(어느 슬롯이든)에 올라가 있는 주문이면 그 반짝임만 멈춘다.
+-- 게임 쪽 값은 건드리지 않고(오염 방지) 애니메이션만 세운다.
+local function SpellNameOf(id)
+	if not id or not (C_Spell and C_Spell.GetSpellName) then return nil end
+	local ok, n = pcall(C_Spell.GetSpellName, id)
+	if ok and n and not isSecret(n) then return n end
+end
+
+local function InCenterBar(info)
+	if not db or not db.sets or not info then return false end
+	local sid, aid, name = info.spellID, info.actionID, info.name
+	if isSecret(sid) then sid = nil end
+	if isSecret(aid) then aid = nil end
+	if isSecret(name) then name = nil end
+	local base
+	if sid and C_Spell and C_Spell.GetBaseSpell then
+		local ok, v = pcall(C_Spell.GetBaseSpell, sid)
+		if ok and v and not isSecret(v) then base = v end
+	end
+	for _, set in pairs(db.sets) do
+		if type(set) == "table" then
+			for _, c in pairs(set) do
+				if type(c) == "table" and c.t == "spell" then
+					if (sid and (c.id == sid or c.sid == sid))
+						or (aid and (c.id == aid or c.sid == aid))
+						or (base and (c.id == base or c.sid == base))
+						or (name and SpellNameOf(c.id) == name) then
+						return true
+					end
+				end
+			end
+		end
+	end
+	return false
+end
+
+local function QuietSpellBookItem(item)
+	local hl = item and item.Button and item.Button.ActionBarHighlight
+	local anim = hl and hl.Anim
+	if not anim or not anim:IsPlaying() then return end
+	if InCenterBar(item.spellBookItemInfo) then anim:Stop() end
+end
+
+local spellBookHooked
+local function HookSpellBook()
+	if spellBookHooked or not SpellBookItemMixin or not SpellBookItemMixin.UpdateActionBarAnim then return end
+	spellBookHooked = true
+	hooksecurefunc(SpellBookItemMixin, "UpdateActionBarAnim", function(item) pcall(QuietSpellBookItem, item) end)
+end
+
+-- 이미 만들어진 마법책 항목은 위 갈고리가 안 걸리므로, 화면에 보이는 항목을 직접 훑는다
+function RefreshSpellBookGlow()
+	local book = PlayerSpellsFrame and PlayerSpellsFrame.SpellBookFrame
+	if not book or not book:IsVisible() or not book.ForEachDisplayedSpell then return end
+	pcall(book.ForEachDisplayedSpell, book, function(item)
+		local hl = item.Button and item.Button.ActionBarHighlight
+		local anim = hl and hl.Anim
+		if not anim then return end
+		if InCenterBar(item.spellBookItemInfo) then
+			if anim:IsPlaying() then anim:Stop() end
+		elseif item.UpdateActionBarAnim then
+			item:UpdateActionBarAnim() -- 센터바에서 뺀 주문은 다시 반짝이게
+		end
+	end)
+end
+
+local spellBookShowHooked
+local spellBookOwner = {}
+local function HookSpellBookShow()
+	local book = PlayerSpellsFrame and PlayerSpellsFrame.SpellBookFrame
+	if spellBookShowHooked or not book then return end
+	spellBookShowHooked = true
+	book:HookScript("OnShow", function() C_Timer.After(0, RefreshSpellBookGlow) end)
+	if book.PagedSpellsFrame and book.PagedSpellsFrame.RegisterCallback and PagedContentFrameBaseMixin then
+		pcall(function()
+			book.PagedSpellsFrame:RegisterCallback(PagedContentFrameBaseMixin.Event.OnUpdate, function()
+				C_Timer.After(0, RefreshSpellBookGlow)
+			end, spellBookOwner)
+		end)
+	end
+end
+
 local ev = CreateFrame("Frame")
 ev:RegisterEvent("ADDON_LOADED")
 ev:RegisterEvent("PLAYER_LOGIN")
@@ -851,6 +937,10 @@ ev:RegisterEvent("UPDATE_MACROS")
 ev:RegisterEvent("PLAYER_REGEN_DISABLED")
 ev:SetScript("OnEvent", function(_, event, arg1)
 	if event == "ADDON_LOADED" then
+		if arg1 == "Blizzard_PlayerSpells" then
+			HookSpellBook(); HookSpellBookShow()
+			return
+		end
 		if arg1 ~= ADDON_NAME then return end
 		-- 설정 창에서 고른 언어 (계정 공통). 비어 있으면 PLAYER_LOGIN에서 애드온 센터 언어를 따른다.
 		CenterBarGlobalDB = CenterBarGlobalDB or {}
@@ -864,6 +954,7 @@ ev:SetScript("OnEvent", function(_, event, arg1)
 		CopyDefaults(db, DEFAULTS)
 		Migrate()
 		EnsurePositions()
+		HookSpellBook(); HookSpellBookShow() -- 마법책이 먼저 읽혀 있던 경우
 	elseif event == "PLAYER_LOGIN" then
 		-- 모든 애드온이 읽힌 뒤: 언어를 따로 고르지 않았으면 hyveo 애드온 센터의 언어를 쓴다
 		local center = not CenterBarGlobalDB.lang and HyveoCenter_GetLanguage and HyveoCenter_GetLanguage()
