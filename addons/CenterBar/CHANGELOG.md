@@ -2,7 +2,7 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
-## Unreleased · 릴리즈 전
+## 1.5.1 — 2026-11-23
 
 **English**
 
