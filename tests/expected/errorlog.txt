@@ -1,0 +1,24 @@
+merged 1 shared tables true lang kept koKR
+|cffffd100hyveo|r: 애드온 오류가 기록됐어요. |cffffffff/cb errors|r 로 볼 수 있어요.
+count 4 default handler still called 4
+== hyveo addon error report ==
+Game: 1.60.1 (build 12345, interface 16002), locale koKR
+Addons: CenterBar 1.7.0, LevelPace (not loaded), HyveoCenter 1.1.0
+Written: 2026-11-25 01:30
+Entries: 4
+
+[1] CenterBar ? | error | 2026-11-20 10:00 | x2
+old saved error
+
+[2] CenterBar 1.7.0 | error | 2026-11-25 01:30 | x2
+Interface/AddOns/CenterBar/CenterBar.lua:500: attempt to index nil
+[Interface/AddOns/CenterBar/CenterBar.lua]:123: in function <x>
+
+[3] CenterBar 1.7.0 | error | 2026-11-25 01:30 | x1
+Interface/AddOns/SomeOther/x.lua:1: boom
+[Interface/AddOns/CenterBar/CenterBar.lua]:123: in function <x>
+
+[4] HyveoCenter 1.1.0 | blocked | 2026-11-25 01:30 | x1
+HyveoCenter: ADDON_ACTION_BLOCKED SomeFunc()
+title(en): noglobal
+after clear 0 0
