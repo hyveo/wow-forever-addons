@@ -1,6 +1,6 @@
 -- hyveo 애드온 오류 기록 — @hyveo
 -- 센터바·레벨페이스·hyveo 애드온 센터에서 난 Lua 오류와 "기능 차단" 알림을 조용히 적어 두고,
--- 창에서 복사해 개발자에게 보낼 수 있게 한다. 게임 플레이에는 끼어들지 않는다.
+-- 창에서 복사해 GitHub 이슈나 CurseForge 댓글에 올릴 수 있게 한다. 게임 플레이에는 끼어들지 않는다.
 --
 -- 이 파일은 세 애드온에 똑같이 들어 있다 (고칠 때는 세 곳을 같이 고친다).
 -- 먼저 읽힌 애드온이 기록을 맡고, 나중에 읽힌 애드온은 같은 기록을 함께 쓴다.
@@ -23,7 +23,7 @@ local isSecret = issecretvalue or function() return false end
 local TEXT = {
 	enUS = {
 		TITLE  = "hyveo addons — error log",
-		HINT   = "Press Ctrl+A, then Ctrl+C to copy, and send it to the developer.",
+		HINT   = "Press Ctrl+A, then Ctrl+C to copy, and post it in a GitHub issue or a CurseForge comment.",
 		FILE   = "It is also saved to a file when you log out or reload:",
 		EMPTY  = "No errors recorded.",
 		SELECT = "Select all",
@@ -34,7 +34,7 @@ local TEXT = {
 	},
 	koKR = {
 		TITLE  = "hyveo 애드온 — 오류 기록",
-		HINT   = "Ctrl+A를 누른 뒤 Ctrl+C로 복사해서 개발자에게 보내 주세요.",
+		HINT   = "Ctrl+A를 누른 뒤 Ctrl+C로 복사해서 GitHub 이슈나 CurseForge 댓글에 올려 주세요.",
 		FILE   = "로그아웃하거나 리로드하면 아래 파일에도 저장돼요:",
 		EMPTY  = "기록된 오류가 없어요.",
 		SELECT = "전체 선택",
@@ -45,7 +45,7 @@ local TEXT = {
 	},
 	deDE = {
 		TITLE  = "hyveo-Addons — Fehlerprotokoll",
-		HINT   = "Drücke Strg+A, dann Strg+C zum Kopieren, und sende es an den Entwickler.",
+		HINT   = "Drücke Strg+A, dann Strg+C zum Kopieren, und poste es in einem GitHub-Issue oder einem CurseForge-Kommentar.",
 		FILE   = "Beim Ausloggen oder Neuladen wird es auch in eine Datei gespeichert:",
 		EMPTY  = "Keine Fehler aufgezeichnet.",
 		SELECT = "Alles auswählen",
@@ -56,7 +56,7 @@ local TEXT = {
 	},
 	frFR = {
 		TITLE  = "Addons hyveo — journal d'erreurs",
-		HINT   = "Appuyez sur Ctrl+A, puis Ctrl+C pour copier, et envoyez-le au développeur.",
+		HINT   = "Appuyez sur Ctrl+A, puis Ctrl+C pour copier, et publiez-le dans une issue GitHub ou un commentaire CurseForge.",
 		FILE   = "Il est aussi enregistré dans un fichier à la déconnexion ou au rechargement :",
 		EMPTY  = "Aucune erreur enregistrée.",
 		SELECT = "Tout sélectionner",
@@ -67,7 +67,7 @@ local TEXT = {
 	},
 	esES = {
 		TITLE  = "Addons de hyveo — registro de errores",
-		HINT   = "Pulsa Ctrl+A y luego Ctrl+C para copiar, y envíalo al desarrollador.",
+		HINT   = "Pulsa Ctrl+A y luego Ctrl+C para copiar, y publícalo en un issue de GitHub o en un comentario de CurseForge.",
 		FILE   = "También se guarda en un archivo al cerrar sesión o recargar:",
 		EMPTY  = "No hay errores registrados.",
 		SELECT = "Seleccionar todo",
@@ -78,7 +78,7 @@ local TEXT = {
 	},
 	ptBR = {
 		TITLE  = "Addons da hyveo — registro de erros",
-		HINT   = "Pressione Ctrl+A e depois Ctrl+C para copiar, e envie ao desenvolvedor.",
+		HINT   = "Pressione Ctrl+A e depois Ctrl+C para copiar, e publique em uma issue do GitHub ou em um comentário no CurseForge.",
 		FILE   = "Também é salvo em um arquivo ao sair ou recarregar:",
 		EMPTY  = "Nenhum erro registrado.",
 		SELECT = "Selecionar tudo",
@@ -89,7 +89,7 @@ local TEXT = {
 	},
 	ruRU = {
 		TITLE  = "Аддоны hyveo — журнал ошибок",
-		HINT   = "Нажмите Ctrl+A, затем Ctrl+C, чтобы скопировать, и отправьте разработчику.",
+		HINT   = "Нажмите Ctrl+A, затем Ctrl+C, чтобы скопировать, и опубликуйте в issue на GitHub или в комментарии на CurseForge.",
 		FILE   = "При выходе или перезагрузке он также сохраняется в файл:",
 		EMPTY  = "Ошибок не записано.",
 		SELECT = "Выделить всё",
@@ -100,7 +100,7 @@ local TEXT = {
 	},
 	zhCN = {
 		TITLE  = "hyveo 插件 — 错误记录",
-		HINT   = "按 Ctrl+A，再按 Ctrl+C 复制，然后发给开发者。",
+		HINT   = "按 Ctrl+A，再按 Ctrl+C 复制，然后发到 GitHub issue 或 CurseForge 评论里。",
 		FILE   = "登出或重载界面时也会保存到文件：",
 		EMPTY  = "没有记录到错误。",
 		SELECT = "全选",
@@ -111,7 +111,7 @@ local TEXT = {
 	},
 	zhTW = {
 		TITLE  = "hyveo 插件 — 錯誤記錄",
-		HINT   = "按 Ctrl+A，再按 Ctrl+C 複製，然後傳給開發者。",
+		HINT   = "按 Ctrl+A，再按 Ctrl+C 複製，然後貼到 GitHub issue 或 CurseForge 留言裡。",
 		FILE   = "登出或重新載入介面時也會儲存到檔案：",
 		EMPTY  = "沒有記錄到錯誤。",
 		SELECT = "全選",

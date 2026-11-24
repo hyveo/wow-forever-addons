@@ -58,12 +58,12 @@ Spotted a bad translation? Please open a [GitHub issue](https://github.com/hyveo
 
 ## 문제가 생기면
 
-[GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)에 아래 내용을 함께 남겨주세요.
+[GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)나 [CurseForge 페이지](https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo)의 댓글에 아래 내용을 함께 남겨주세요.
 
-- **오류가 나면**: 게임에서 `/hv errors`를 입력하면 오류 기록 창이 열려요. 애드온 센터 창의 **오류 기록** 버튼으로도 열려요. `Ctrl+A`, `Ctrl+C`로 복사해서 이슈에 붙여 넣어 주세요.
+- **오류가 나면**: 게임에서 `/hv errors`를 입력하면 오류 기록 창이 열려요. 애드온 센터 창의 **오류 기록** 버튼으로도 열려요. `Ctrl+A`, `Ctrl+C`로 복사해서 GitHub 이슈나 CurseForge 댓글에 붙여 넣어 주세요.
   - hyveo 애드온(센터바, 레벨페이스, 애드온 센터)에서 난 오류를 자동으로 적어 둔 기록이에요. 오류 창을 켜 두지 않아도 남아요.
   - 캐릭터·서버·계정 이름은 들어가지 않아요. 애드온 버전, 게임 버전, 시각, 오류 문구만 있어요.
   - 로그아웃하거나 리로드하면 `WTF\Account\<계정>\SavedVariables\HyveoCenter.lua` 파일에도 저장돼요.
 - **애드온 목록에 미호환이 뜨면**: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호
 
-If something breaks: type `/hv errors` in game, press `Ctrl+A` then `Ctrl+C` in the window that opens, and paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). The log holds addon and game versions, time and the error text. It has no character, realm or account names.
+If something breaks: type `/hv errors` in game, press `Ctrl+A` then `Ctrl+C` in the window that opens, and paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues) or a comment on the [CurseForge page](https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo). The log holds addon and game versions, time and the error text. It has no character, realm or account names.

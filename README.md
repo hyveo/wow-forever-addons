@@ -78,7 +78,7 @@ Your settings stay either way. They are saved in the `WTF` folder, not in the ad
 
 1. In game, type `/cb errors`, `/lp errors` or `/hv errors`. They all open the same error log window.
 2. Press `Ctrl+A`, then `Ctrl+C` to copy the whole log.
-3. Paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues), with a line on what you were doing.
+3. Paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues) or a comment on the addon's CurseForge page, with a line on what you were doing.
 
 The addons write their own errors to this log automatically, so you do not need to turn on the game's error popups. The log holds addon and game versions, the time and the error text. It has no character, realm or account names.
 
@@ -202,7 +202,7 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 
 1. 게임에서 `/cb errors`, `/lp errors`, `/hv errors` 중 하나를 입력해요. 모두 같은 오류 기록 창이 열려요.
 2. `Ctrl+A`를 누른 뒤 `Ctrl+C`로 전체를 복사해요.
-3. [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)에 붙여 넣고, 무엇을 하다가 생겼는지 한 줄 적어 주세요.
+3. [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)나 해당 애드온의 CurseForge 페이지 댓글에 붙여 넣고, 무엇을 하다가 생겼는지 한 줄 적어 주세요.
 
 애드온이 자기 오류를 자동으로 이 기록에 적어 두기 때문에, 게임의 오류 창을 켜 둘 필요가 없어요. 기록에는 애드온 버전, 게임 버전, 시각, 오류 문구만 있고 캐릭터·서버·계정 이름은 들어가지 않아요.
 
