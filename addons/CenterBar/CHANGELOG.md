@@ -7,11 +7,13 @@ Each version lists English first, then Korean. 버전마다 영어를 먼저, �
 **English**
 
 - Fixed mounts on a button not being summoned when clicked. Click again while mounted to dismount
+- Items you have not used yet (such as the sleeping bag) can now be dragged off a button
 - Shift + right-click a button to empty it. This always works, including for items that cannot be dragged off
 
 **한국어**
 
 - 버튼에 넣은 탈것이 눌러도 불러지지 않던 문제 수정. 탄 상태에서 다시 누르면 내려요
+- 아직 한 번도 쓰지 않은 아이템(침낭 등)도 버튼에서 끌어서 뺄 수 있어요
 - 버튼을 Shift + 오른쪽 클릭하면 비워져요. 끌어서 빠지지 않는 아이템도 이 방법으로는 항상 비울 수 있어요
 
 ## 1.7.0 — 2026-11-25
