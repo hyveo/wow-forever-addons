@@ -236,7 +236,9 @@ local DRAG_START = [[
 	if self:GetAttribute("cb-lock") and not mod then return false end
 	local t = self:GetAttribute("type")
 	if t == "spell" then return "spell", self:GetAttribute("spell") end
-	if t == "item" then return "item", self:GetAttribute("item") end
+	-- 아이템은 여기서 집지 않는다: 게임이 아직 모르는(한 번도 안 쓴) 아이템을 번호로 집으려 하면 실패하면서
+	-- 뒤따르는 "버튼 비우기"까지 막힌다. 아래 OnDragStart에서 가방 칸을 찾아 직접 집는다.
+	if t == "item" then return false end
 	if t == "macro" then return "macro", self:GetAttribute("macro") end
 	return false
 ]]
@@ -517,6 +519,8 @@ local function PickupContent(c)
 				end
 			end
 		end
+		-- 가방에도 장비 칸에도 없으면 번호로 집어 본다 (실패해도 버튼은 비워진다)
+		if C_Item and C_Item.PickupItem then pcall(C_Item.PickupItem, "item:" .. c.id) end
 	elseif c.t == "spell" then
 		if c.mount and C_MountJournal and C_MountJournal.GetDisplayedMountID and C_MountJournal.Pickup then
 			local n = C_MountJournal.GetNumDisplayedMounts and C_MountJournal.GetNumDisplayedMounts() or 0
