@@ -84,7 +84,7 @@ local DEFAULTS = {
 	quiet        = false,    -- 채팅창 안내 메시지 숨김
 	minimapHide  = false,    -- 미니맵 버튼 숨김
 	minimapAngle = 215,      -- 미니맵 둘레에서의 위치(도)
-	sets       = {},         -- [슬롯][버튼] = { t = "spell"/"item"/"macro", id = 번호, name = 매크로 이름 }
+	sets       = {},         -- [슬롯][버튼] = { t = "spell"/"item"/"macro"/"pet", id = 번호(애완동물은 고유 ID), name = 매크로·애완동물 이름 }
 	imported   = false,      -- 예전 버전 기술 가져오기를 끝냈는지
 	locked     = true,
 	tooltips   = true,
@@ -270,8 +270,22 @@ local function MacroSpell(c)
 	end
 end
 
+-- 애완동물 정보: 이름, 아이콘 (못 읽으면 넣을 때 기억해 둔 값)
+local function PetInfo(guid)
+	if not (C_PetJournal and C_PetJournal.GetPetInfoByPetID) or not guid then return nil end
+	local ok, _, custom, _, _, _, _, _, name, icon = pcall(C_PetJournal.GetPetInfoByPetID, guid)
+	if not ok then return nil end
+	if isSecret(name) then name = nil end
+	if isSecret(custom) then custom = nil end
+	if isSecret(icon) then icon = nil end
+	return (custom and custom ~= "" and custom) or name, icon
+end
+
 local function ContentTexture(c)
-	if c.t == "spell" then
+	if c.t == "pet" then
+		local _, icon = PetInfo(c.id)
+		return icon or c.icon or 134400
+	elseif c.t == "spell" then
 		return C_Spell.GetSpellTexture(c.id)
 	elseif c.t == "item" then
 		return C_Item.GetItemIconByID(c.id)
@@ -486,10 +500,12 @@ local function PickupContent(c)
 	elseif c.t == "macro" then
 		local idx = MacroIndex(c)
 		if idx and PickupMacro then pcall(PickupMacro, idx) end
+	elseif c.t == "pet" then
+		if C_PetJournal and C_PetJournal.PickupPet then pcall(C_PetJournal.PickupPet, c.id) end
 	end
 end
 
--- 커서에 들고 있는 기술/아이템/매크로/탈것을 i번 버튼에 넣는다
+-- 커서에 들고 있는 기술/아이템/매크로/탈것/애완동물을 i번 버튼에 넣는다
 local function ReceiveCursor(i)
 	if InCombatLockdown() then return end
 	local kind, a1, _, a3, a4 = GetCursorInfo()
@@ -507,6 +523,12 @@ local function ReceiveCursor(i)
 		-- 탈것은 "탈것을 부르는 주문"으로 넣는다. mount = 탈것 번호(끌어 뺄 때 다시 집기 위해 기억)
 		local sid = MountSpell(a1)
 		if sid then c = { t = "spell", id = sid, sid = sid, mount = a1 } end
+	elseif kind == "battlepet" then
+		-- 애완동물은 보안 동작이 따로 없어서, 버튼을 누를 때 직접 불러낸다 (아래 OnClick)
+		if a1 and not isSecret(a1) then
+			local name, icon = PetInfo(a1)
+			c = { t = "pet", id = a1, name = name, icon = icon }
+		end
 	end
 	if not c then
 		if kind then Print(L.CANT_PLACE) end
@@ -585,6 +607,15 @@ for i = 1, NUM_BUTTONS do
 	b:SetScript("PostClick", function(self)
 		if self.content then UpdateState(self) else self:SetChecked(false) end
 	end)
+	-- 애완동물: 누르면 불러내고, 나와 있으면 들여보낸다 (게임 기본 동작과 같음).
+	-- 버튼은 누를 때와 뗄 때 둘 다 신호가 오므로, 게임 설정에 맞는 쪽 한 번만 처리한다.
+	b:HookScript("OnClick", function(self, _, down)
+		local c = self.content
+		if not c or c.t ~= "pet" then return end
+		local useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown") and true or false
+		if (down and true or false) ~= useDown then return end
+		if C_PetJournal and C_PetJournal.SummonPetByGUID then pcall(C_PetJournal.SummonPetByGUID, c.id) end
+	end)
 	b:SetScript("OnEnter", function(self)
 		local c = self.content
 		if db and db.tooltips and c then
@@ -592,6 +623,7 @@ for i = 1, NUM_BUTTONS do
 			else GameTooltip:SetOwner(self, "ANCHOR_RIGHT") end
 			if c.t == "spell" then ShowSpellTooltip(c)
 			elseif c.t == "item" then pcall(GameTooltip.SetItemByID, GameTooltip, c.id)
+			elseif c.t == "pet" then GameTooltip:SetText(PetInfo(c.id) or c.name or "")
 			else GameTooltip:SetText(c.name or "") end
 			GameTooltip:Show()
 		end
