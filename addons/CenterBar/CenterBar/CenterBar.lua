@@ -440,7 +440,56 @@ end -- ShowSpellTooltip
 
 local buttons = {}
 
--- 커서에 들고 있는 기술/아이템/매크로를 i번 버튼에 넣는다
+-- 탈것 번호 -> 그 탈것을 부르는 주문 번호
+local RANDOM_MOUNT_ID, RANDOM_MOUNT_SPELL = 268435455, 150544 -- "무작위 즐겨찾는 탈것"
+local function MountSpell(mountID)
+	if not mountID or isSecret(mountID) then return nil end
+	if mountID == RANDOM_MOUNT_ID then return RANDOM_MOUNT_SPELL end
+	if not (C_MountJournal and C_MountJournal.GetMountInfoByID) then return nil end
+	local ok, _, spellID = pcall(C_MountJournal.GetMountInfoByID, mountID)
+	if ok and spellID and not isSecret(spellID) then return spellID end
+end
+
+-- 버튼에서 끌어 뺄 때, 게임이 커서에 집어 주지 않은 것을 직접 집어 본다 (못 집어도 버튼은 비운다)
+local function PickupContent(c)
+	if c.t == "item" then
+		if C_Container and C_Container.GetContainerNumSlots then
+			for bag = 0, (NUM_BAG_SLOTS or 4) do
+				for slot = 1, (C_Container.GetContainerNumSlots(bag) or 0) do
+					if C_Container.GetContainerItemID(bag, slot) == c.id then
+						pcall(C_Container.PickupContainerItem, bag, slot)
+						return
+					end
+				end
+			end
+		end
+		if GetInventoryItemID and PickupInventoryItem then
+			for slot = 1, 19 do
+				if GetInventoryItemID("player", slot) == c.id then
+					pcall(PickupInventoryItem, slot)
+					return
+				end
+			end
+		end
+	elseif c.t == "spell" then
+		if c.mount and C_MountJournal and C_MountJournal.GetDisplayedMountID and C_MountJournal.Pickup then
+			local n = C_MountJournal.GetNumDisplayedMounts and C_MountJournal.GetNumDisplayedMounts() or 0
+			for idx = 1, n do
+				if C_MountJournal.GetDisplayedMountID(idx) == c.mount then
+					pcall(C_MountJournal.Pickup, idx)
+					return
+				end
+			end
+		elseif C_Spell and C_Spell.PickupSpell then
+			pcall(C_Spell.PickupSpell, c.sid or c.id)
+		end
+	elseif c.t == "macro" then
+		local idx = MacroIndex(c)
+		if idx and PickupMacro then pcall(PickupMacro, idx) end
+	end
+end
+
+-- 커서에 들고 있는 기술/아이템/매크로/탈것을 i번 버튼에 넣는다
 local function ReceiveCursor(i)
 	if InCombatLockdown() then return end
 	local kind, a1, _, a3, a4 = GetCursorInfo()
@@ -454,6 +503,10 @@ local function ReceiveCursor(i)
 	elseif kind == "macro" then
 		local name = a1 and GetMacroInfo(a1)
 		if name then c = { t = "macro", id = a1, name = name } end
+	elseif kind == "mount" then
+		-- 탈것은 "탈것을 부르는 주문"으로 넣는다. mount = 탈것 번호(끌어 뺄 때 다시 집기 위해 기억)
+		local sid = MountSpell(a1)
+		if sid then c = { t = "spell", id = sid, sid = sid, mount = a1 } end
 	end
 	if not c then
 		if kind then Print(L.CANT_PLACE) end
@@ -480,13 +533,15 @@ for i = 1, NUM_BUTTONS do
 	b:SetScript("OnDragStart", NoOp)
 	SecureHandlerWrapScript(b, "OnDragStart", bar, DRAG_START)
 	-- 끌어 빼면(커서에 들리면) 버튼을 비운다
+	-- 게임이 집어 주지 않는 것(아직 안 써 본 아이템, 탈것 등)도 있어서, 커서에 들렸는지와 상관없이 비운다.
 	b:HookScript("OnDragStart", function(self)
 		if InCombatLockdown() or not self.content then return end
-		if GetCursorInfo() then
-			SetContent(i, nil)
-			ApplyContent(self, nil)
-			UpdateButton(self)
-		end
+		local mod = (IsModifiedClick and IsModifiedClick("PICKUPACTION")) or IsShiftKeyDown()
+		if self:GetAttribute("cb-lock") and not mod then return end
+		if not GetCursorInfo() then pcall(PickupContent, self.content) end
+		SetContent(i, nil)
+		ApplyContent(self, nil)
+		UpdateButton(self)
 	end)
 
 	-- 빈 칸 테두리: 예전 센터바와 같은 게임 기본 퀵슬롯 테두리를 옅게
