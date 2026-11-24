@@ -2,6 +2,18 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## Unreleased · 릴리즈 전
+
+**English**
+
+- Mounts can now be placed on CenterBar buttons: drag one from the mount window
+- Fixed some items (such as the sleeping bag) getting stuck on a button: anything on a button can now always be dragged off
+
+**한국어**
+
+- 탈것도 센터바 버튼에 넣을 수 있어요: 탈것 창에서 끌어다 놓으면 돼요
+- 일부 아이템(침낭 등)이 버튼에서 빠지지 않던 문제 수정: 버튼에 넣은 것은 언제든 끌어서 뺄 수 있어요
+
 ## 1.5.1 — 2026-11-23
 
 **English**
