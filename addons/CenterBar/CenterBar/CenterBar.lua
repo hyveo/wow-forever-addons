@@ -281,10 +281,33 @@ local function PetInfo(guid)
 	return (custom and custom ~= "" and custom) or name, icon
 end
 
+local function EquipSetID(name)
+	if not (C_EquipmentSet and C_EquipmentSet.GetEquipmentSetID) or not name then return nil end
+	local ok, id = pcall(C_EquipmentSet.GetEquipmentSetID, name)
+	if ok and id and not isSecret(id) then return id end
+end
+
 local function ContentTexture(c)
 	if c.t == "pet" then
 		local _, icon = PetInfo(c.id)
 		return icon or c.icon or 134400
+	elseif c.t == "toy" then
+		return C_Item.GetItemIconByID(c.id)
+	elseif c.t == "equipset" then
+		local id = EquipSetID(c.name)
+		if id then
+			local ok, _, icon = pcall(C_EquipmentSet.GetEquipmentSetInfo, id)
+			if ok and icon and not isSecret(icon) then return icon end
+		end
+		return c.icon or 134400
+	elseif c.t == "petaction" then
+		if GetPetActionInfo then
+			local ok, _, tex = pcall(GetPetActionInfo, c.id)
+			if ok and tex and not isSecret(tex) then return (_G[tex]) or tex end
+		end
+		return c.icon or 134400
+	elseif c.t == "flyout" then
+		return c.icon or 134400
 	elseif c.t == "spell" then
 		return C_Spell.GetSpellTexture(c.id)
 	elseif c.t == "item" then
@@ -395,19 +418,26 @@ end
 local function ApplyContent(b, c)
 	b.content = c
 	b.itemCount = nil
-	local t, spell, item, macro
+	local t, spell, item, macro, toy, equipset, action
 	if c then
 		if c.t == "spell" then t, spell = "spell", c.id
 		elseif c.t == "item" then t, item = "item", "item:" .. c.id
 		elseif c.t == "macro" then
 			macro = MacroIndex(c)
 			if macro then t = "macro" end
-		end
+		elseif c.t == "toy" then t, toy = "toy", c.id
+		elseif c.t == "equipset" then t, equipset = "equipmentset", c.name
+		elseif c.t == "petaction" then t, action = "pet", c.id
+		elseif c.t == "flyout" then t, spell = "flyout", c.id
+		end -- "pet"(애완동물)은 보안 동작이 없어 OnClick에서 처리
 	end
 	b:SetAttribute("type", t)
 	b:SetAttribute("spell", spell)
 	b:SetAttribute("item", item)
 	b:SetAttribute("macro", macro)
+	b:SetAttribute("toy", toy)
+	b:SetAttribute("equipmentset", equipset)
+	b:SetAttribute("action", action)
 end
 
 -- 주문 툴팁: 스킬북에서 볼 때와 같은 내용(배운 스킬 레벨 포함)이 나오도록 스킬북 칸으로 먼저 띄운다.
@@ -502,6 +532,13 @@ local function PickupContent(c)
 		if idx and PickupMacro then pcall(PickupMacro, idx) end
 	elseif c.t == "pet" then
 		if C_PetJournal and C_PetJournal.PickupPet then pcall(C_PetJournal.PickupPet, c.id) end
+	elseif c.t == "toy" then
+		if C_ToyBox and C_ToyBox.PickupToyBoxItem then pcall(C_ToyBox.PickupToyBoxItem, c.id) end
+	elseif c.t == "equipset" then
+		local id = EquipSetID(c.name)
+		if id and C_EquipmentSet.PickupEquipmentSet then pcall(C_EquipmentSet.PickupEquipmentSet, id) end
+	elseif c.t == "petaction" then
+		if PickupPetAction then pcall(PickupPetAction, c.id) end
 	end
 end
 
@@ -515,7 +552,16 @@ local function ReceiveCursor(i)
 		-- id = 기본 주문 번호(시전·아이콘용), sid = 지금 배운 그대로의 주문 번호(툴팁용)
 		if id then c = { t = "spell", id = id, sid = a3 } end
 	elseif kind == "item" then
-		if a1 then c = { t = "item", id = a1 } end
+		if a1 then
+			-- 장난감은 가방에 없는 "장난감 상자" 물건이라 쓰는 방법이 다르다
+			local isToy = false
+			if PlayerHasToy and C_Item.GetItemCount then
+				local ok, has = pcall(PlayerHasToy, a1)
+				local ok2, n = pcall(C_Item.GetItemCount, a1)
+				isToy = ok and has and not isSecret(has) and ok2 and not isSecret(n) and (n or 0) == 0 or false
+			end
+			c = { t = isToy and "toy" or "item", id = a1 }
+		end
 	elseif kind == "macro" then
 		local name = a1 and GetMacroInfo(a1)
 		if name then c = { t = "macro", id = a1, name = name } end
@@ -523,6 +569,29 @@ local function ReceiveCursor(i)
 		-- 탈것은 "탈것을 부르는 주문"으로 넣는다. mount = 탈것 번호(끌어 뺄 때 다시 집기 위해 기억)
 		local sid = MountSpell(a1)
 		if sid then c = { t = "spell", id = sid, sid = sid, mount = a1 } end
+	elseif kind == "petaction" then
+		-- 소환수 기술: 주문 번호가 있으면 주문으로, 없으면(공격·따라오기 등) 소환수 바 칸 번호로
+		if a1 and not isSecret(a1) and a1 ~= 0 then
+			c = { t = "spell", id = a1, sid = a1 }
+		else
+			local _, _, idx = GetCursorInfo()
+			if idx and not isSecret(idx) then
+				local name
+				if GetPetActionInfo then name = GetPetActionInfo(idx) end
+				if isSecret(name) then name = nil end
+				c = { t = "petaction", id = idx, name = name and (_G[name] or name) or nil }
+			end
+		end
+	elseif kind == "flyout" then
+		-- 펼침 메뉴: a1 = 펼침 번호, 두 번째 값 = 아이콘
+		local _, _, icon = GetCursorInfo()
+		if a1 and not isSecret(a1) then
+			local name
+			if GetFlyoutInfo then local ok, n = pcall(GetFlyoutInfo, a1) if ok and not isSecret(n) then name = n end end
+			c = { t = "flyout", id = a1, name = name, icon = (not isSecret(icon)) and icon or nil }
+		end
+	elseif kind == "equipmentset" then
+		if a1 and not isSecret(a1) then c = { t = "equipset", name = a1 } end
 	elseif kind == "battlepet" then
 		-- 애완동물은 보안 동작이 따로 없어서, 버튼을 누를 때 직접 불러낸다 (아래 OnClick)
 		if a1 and not isSecret(a1) then
@@ -622,7 +691,7 @@ for i = 1, NUM_BUTTONS do
 			if GameTooltip_SetDefaultAnchor then GameTooltip_SetDefaultAnchor(GameTooltip, self)
 			else GameTooltip:SetOwner(self, "ANCHOR_RIGHT") end
 			if c.t == "spell" then ShowSpellTooltip(c)
-			elseif c.t == "item" then pcall(GameTooltip.SetItemByID, GameTooltip, c.id)
+			elseif c.t == "item" or c.t == "toy" then pcall(GameTooltip.SetItemByID, GameTooltip, c.id)
 			elseif c.t == "pet" then GameTooltip:SetText(PetInfo(c.id) or c.name or "")
 			else GameTooltip:SetText(c.name or "") end
 			GameTooltip:Show()
