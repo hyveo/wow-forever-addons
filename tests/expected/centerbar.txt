@@ -30,3 +30,6 @@ right without shift keeps: b11 t=item type=item spell=nil toy=nil set=nil action
 mount button: b12 t=spell type=nil spell=nil toy=nil set=nil action=nil
 click 1 summon: 55 mounted true
 click 2 dismiss: true mounted false
+wrapped scripts: OnDragStart 18 OnClick 18
+mouse down: nil
+mouse up: 55
