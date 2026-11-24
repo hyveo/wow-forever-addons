@@ -6,7 +6,7 @@ placed: b2 type=spell spell=778 item=nil macro=nil cursor cleared: true
 hooked: in-bar glow false override glow false not-in-bar glow true pre(unhooked) glow true
 after show: pre glow false
 after swap: 777 glow true 999 glow false cursor
-mount placed: b3 type=spell spell=9001 item=nil macro=nil cursor nil
+mount placed: b3 type=nil spell=nil item=nil macro=nil cursor nil
 pet placed: pet 고양이 b5 type=nil spell=nil item=nil macro=nil
 pet summons per click: 1
 pet removed: nil pet
@@ -27,3 +27,6 @@ before clear: b11 t=item type=item spell=nil toy=nil set=nil action=nil shift-ty
 shift+right down: b11 t=item type=item spell=nil toy=nil set=nil action=nil
 shift+right up: b11 t=nil type=nil spell=nil toy=nil set=nil action=nil
 right without shift keeps: b11 t=item type=item spell=nil toy=nil set=nil action=nil
+mount button: b12 t=spell type=nil spell=nil toy=nil set=nil action=nil
+click 1 summon: 55 mounted true
+click 2 dismiss: true mounted false

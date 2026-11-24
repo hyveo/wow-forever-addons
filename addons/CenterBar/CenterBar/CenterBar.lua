@@ -420,7 +420,9 @@ local function ApplyContent(b, c)
 	b.itemCount = nil
 	local t, spell, item, macro, toy, equipset, action
 	if c then
-		if c.t == "spell" then t, spell = "spell", c.id
+		if c.t == "spell" and c.mount then
+			-- 탈것: 주문 번호로 시전하면 불러지지 않아서, 보안 동작 없이 OnClick에서 탈것 창과 같은 방법으로 부른다
+		elseif c.t == "spell" then t, spell = "spell", c.id
 		elseif c.t == "item" then t, item = "item", "item:" .. c.id
 		elseif c.t == "macro" then
 			macro = MacroIndex(c)
@@ -691,9 +693,19 @@ for i = 1, NUM_BUTTONS do
 			end
 			return
 		end
-		if not c or c.t ~= "pet" then return end
+		if not c or not (c.t == "pet" or c.mount) then return end
 		local useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown") and true or false
 		if (down and true or false) ~= useDown then return end
+		if c.mount then
+			-- 탈것 창의 "탈것 타기" 버튼과 같은 동작: 타고 있으면 내리고, 아니면 부른다
+			if not C_MountJournal then return end
+			if IsMounted and IsMounted() then
+				if C_MountJournal.Dismiss then pcall(C_MountJournal.Dismiss) end
+			elseif C_MountJournal.SummonByID then
+				pcall(C_MountJournal.SummonByID, c.mount == RANDOM_MOUNT_ID and 0 or c.mount)
+			end
+			return
+		end
 		if C_PetJournal and C_PetJournal.SummonPetByGUID then pcall(C_PetJournal.SummonPetByGUID, c.id) end
 	end)
 	b:SetScript("OnEnter", function(self)
