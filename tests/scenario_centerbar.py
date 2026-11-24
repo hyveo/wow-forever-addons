@@ -162,5 +162,13 @@ cursor={"petaction",0,1} catch[9].scripts.OnReceiveDrag(catch[9]) print(full(9))
 cursor={"flyout",12,555} catch[10].scripts.OnReceiveDrag(catch[10]) print(full(10))
 cursor={"money",100} catch[11].scripts.OnReceiveDrag(catch[11]) print(full(11), printed[#printed]) cursor=nil
 cursor={"item",4242,"l"} catch[11].scripts.OnReceiveDrag(catch[11]) print(full(11))
+
+-- Shift+우클릭으로 비우기
+print("before clear:", full(11), "shift-type2", tostring(CenterBarButton11.attrs["shift-type2"]))
+shift=true function IsShiftKeyDown() return shift end
+for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"RightButton",true) end print("shift+right down:", full(11))
+for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"RightButton",false) end print("shift+right up:", full(11))
+shift=false cursor={"item",4242,"l"} catch[11].scripts.OnReceiveDrag(catch[11])
+for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"RightButton",false) end print("right without shift keeps:", full(11))
 """)
 for p in L.globals().printed.values(): print(p)

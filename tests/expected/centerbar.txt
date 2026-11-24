@@ -23,3 +23,7 @@ b10 t=flyout type=flyout spell=12 toy=nil set=nil action=nil
 |cffffd100센터바|r: 이건 버튼에 넣을 수 없어요.
 b11 t=nil type=nil spell=nil toy=nil set=nil action=nil |cffffd100센터바|r: 이건 버튼에 넣을 수 없어요.
 b11 t=item type=item spell=nil toy=nil set=nil action=nil
+before clear: b11 t=item type=item spell=nil toy=nil set=nil action=nil shift-type2 cbclear
+shift+right down: b11 t=item type=item spell=nil toy=nil set=nil action=nil
+shift+right up: b11 t=nil type=nil spell=nil toy=nil set=nil action=nil
+right without shift keeps: b11 t=item type=item spell=nil toy=nil set=nil action=nil

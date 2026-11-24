@@ -620,6 +620,7 @@ for i = 1, NUM_BUTTONS do
 	b:SetAttribute("checkselfcast", true)
 	b:SetAttribute("checkfocuscast", true)
 	b:RegisterForClicks("AnyUp", "AnyDown")
+	b:SetAttribute("shift-type2", "cbclear") -- Shift+오른쪽 클릭은 아무 기술도 쓰지 않음 (비우기 전용, OnClick에서 처리)
 	b:RegisterForDrag("LeftButton")
 	b:SetScript("OnDragStart", NoOp)
 	SecureHandlerWrapScript(b, "OnDragStart", bar, DRAG_START)
@@ -678,8 +679,18 @@ for i = 1, NUM_BUTTONS do
 	end)
 	-- 애완동물: 누르면 불러내고, 나와 있으면 들여보낸다 (게임 기본 동작과 같음).
 	-- 버튼은 누를 때와 뗄 때 둘 다 신호가 오므로, 게임 설정에 맞는 쪽 한 번만 처리한다.
-	b:HookScript("OnClick", function(self, _, down)
+	b:HookScript("OnClick", function(self, button, down)
 		local c = self.content
+		-- Shift+오른쪽 클릭 = 버튼 비우기. 끌어서 빼기가 안 되는 것도 이걸로는 항상 비울 수 있다.
+		-- (이 조합은 아래 "shift-type2"로 보안 동작을 없애 두어서 기술이 써지지 않는다)
+		if button == "RightButton" and IsShiftKeyDown() then
+			if c and not down and not InCombatLockdown() then
+				SetContent(i, nil)
+				ApplyContent(self, nil)
+				UpdateButton(self)
+			end
+			return
+		end
 		if not c or c.t ~= "pet" then return end
 		local useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown") and true or false
 		if (down and true or false) ~= useDown then return end

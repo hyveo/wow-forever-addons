@@ -2,6 +2,16 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## 1.7.1 — 테스트 중
+
+**English**
+
+- Shift + right-click a button to empty it. This always works, including for items that cannot be dragged off
+
+**한국어**
+
+- 버튼을 Shift + 오른쪽 클릭하면 비워져요. 끌어서 빠지지 않는 아이템도 이 방법으로는 항상 비울 수 있어요
+
 ## 1.7.0 — 2026-11-25
 
 **English**
