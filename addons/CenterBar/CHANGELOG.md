@@ -2,7 +2,7 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
-## 1.7.0 — 테스트 중
+## 1.7.0 — 2026-11-25
 
 **English**
 

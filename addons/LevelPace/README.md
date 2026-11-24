@@ -45,6 +45,7 @@
 | `/lp 잠금` (`lock`) | 정보 바 잠금/해제 |
 | `/lp 초기화` (`reset`) | 세션 기록 초기화 |
 | `/lp 미니맵` (`minimap`) | 미니맵 버튼 보이기/숨기기 |
+| `/lp 오류` (`errors`) | 오류 기록 창 열기 |
 
 미니맵 버튼: 왼쪽 클릭 = 상세 창, 오른쪽 클릭 = 정보 바 보이기/숨기기, 드래그로 위치 이동.
 
@@ -66,5 +67,10 @@ Spotted a bad translation? Please open a [GitHub issue](https://github.com/hyveo
 
 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)에 아래 내용을 함께 남겨주세요.
 
-- 애드온 목록에 **미호환**이 뜨면: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호를 알려주세요.
-- 오류가 나면: `/console scriptErrors 1` 입력 후 다시 재현하고 오류 문구를 알려주세요.
+- **오류가 나면**: 게임에서 `/lp errors`를 입력하면 오류 기록 창이 열려요. `Ctrl+A`, `Ctrl+C`로 복사해서 이슈에 붙여 넣어 주세요.
+  - hyveo 애드온(센터바, 레벨페이스, 애드온 센터)에서 난 오류를 자동으로 적어 둔 기록이에요. 오류 창을 켜 두지 않아도 남아요.
+  - 캐릭터·서버·계정 이름은 들어가지 않아요. 애드온 버전, 게임 버전, 시각, 오류 문구만 있어요.
+  - 로그아웃하거나 리로드하면 `WTF\Account\<계정>\SavedVariables\LevelPace.lua` 파일에도 저장돼요.
+- **애드온 목록에 미호환이 뜨면**: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호
+
+If something breaks: type `/lp errors` in game, press `Ctrl+A` then `Ctrl+C` in the window that opens, and paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). The log holds addon and game versions, time and the error text. It has no character, realm or account names.

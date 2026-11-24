@@ -57,6 +57,7 @@
 | `/cb 1` ~ `/cb 5` | 슬롯 바꾸기 (`/cb next` = 다음 슬롯, 단축키도 있음) |
 | `/cb lock` (`잠금`) | 위치 잠금/해제 |
 | `/cb reset` (`초기화`) | 위치와 설정을 처음으로 |
+| `/cb errors` (`오류`) | 오류 기록 창 열기 |
 | `/hv cb` | hyveo 애드온 센터가 있으면 여기서도 열림 |
 
 ## 알아두기
@@ -76,8 +77,13 @@ Spotted an awkward or wrong translation? Please open a [GitHub issue](https://gi
 
 [GitHub 이슈](https://github.com/hyveo/wow-forever-addons/issues)에 아래 내용을 함께 남겨주세요.
 
-- 애드온 목록에 **미호환**이 뜨면: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호
-- 오류가 나면: `/console scriptErrors 1` 입력 후 다시 재현한 오류 문구
+- **오류가 나면**: 게임에서 `/cb errors`를 입력하면 오류 기록 창이 열려요. `Ctrl+A`, `Ctrl+C`로 복사해서 이슈에 붙여 넣어 주세요.
+  - hyveo 애드온(센터바, 레벨페이스, 애드온 센터)에서 난 오류를 자동으로 적어 둔 기록이에요. 오류 창을 켜 두지 않아도 남아요.
+  - 캐릭터·서버·계정 이름은 들어가지 않아요. 애드온 버전, 게임 버전, 시각, 오류 문구만 있어요.
+  - 로그아웃하거나 리로드하면 `WTF\Account\<계정>\SavedVariables\CenterBar.lua` 파일에도 저장돼요.
+- **애드온 목록에 미호환이 뜨면**: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호
+
+If something breaks: type `/cb errors` in game, press `Ctrl+A` then `Ctrl+C` in the window that opens, and paste it into a [GitHub issue](https://github.com/hyveo/wow-forever-addons/issues). The log holds addon and game versions, time and the error text. It has no character, realm or account names.
 
 ## 참고 · Credits
 
