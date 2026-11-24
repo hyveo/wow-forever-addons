@@ -6,12 +6,12 @@ Each version lists English first, then Korean. 버전마다 영어를 먼저, �
 
 **English**
 
-- Mounts can now be placed on CenterBar buttons: drag one from the mount window
+- Mounts and pets can now be placed on CenterBar buttons: drag one from the mount or pet window, the same way as an item
 - Fixed some items (such as the sleeping bag) getting stuck on a button: anything on a button can now always be dragged off
 
 **한국어**
 
-- 탈것도 센터바 버튼에 넣을 수 있어요: 탈것 창에서 끌어다 놓으면 돼요
+- 탈것과 애완동물도 센터바 버튼에 넣을 수 있어요: 아이템을 넣을 때처럼 탈것·애완동물 창에서 끌어다 놓으면 돼요
 - 일부 아이템(침낭 등)이 버튼에서 빠지지 않던 문제 수정: 버튼에 넣은 것은 언제든 끌어서 뺄 수 있어요
 
 ## 1.5.1 — 2026-11-23
