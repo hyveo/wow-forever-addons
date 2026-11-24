@@ -170,5 +170,13 @@ for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"Righ
 for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"RightButton",false) end print("shift+right up:", full(11))
 shift=false cursor={"item",4242,"l"} catch[11].scripts.OnReceiveDrag(catch[11])
 for _,h in ipairs(CenterBarButton11.hooked.OnClick) do h(CenterBarButton11,"RightButton",false) end print("right without shift keeps:", full(11))
+
+-- 탈것 버튼: 보안 동작 없이 OnClick에서 부르고, 탄 상태면 내린다
+cursor={"mount",55,2} catch[12].scripts.OnReceiveDrag(catch[12]) print("mount button:", full(12))
+mounted=false function IsMounted() return mounted end
+C_MountJournal.SummonByID=function(id) summonedMount=id mounted=true end C_MountJournal.Dismiss=function() dismissed=true mounted=false end
+local function click(b) for _,h in ipairs(b.hooked.OnClick) do h(b,"LeftButton",true) h(b,"LeftButton",false) end end
+click(CenterBarButton12) print("click 1 summon:", tostring(summonedMount), "mounted", tostring(mounted))
+click(CenterBarButton12) print("click 2 dismiss:", tostring(dismissed), "mounted", tostring(mounted))
 """)
 for p in L.globals().printed.values(): print(p)
