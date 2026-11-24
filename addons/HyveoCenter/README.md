@@ -11,6 +11,7 @@ hyveo가 만든 와우 포에버 애드온을 게임 안에서 한 창으로 관
 
 - **CurseForge (추천):** <https://www.curseforge.com/wow/addons/hyveo-addon-center-hyveo> — CurseForge 앱에서 게임 버전을 WoW Forever로 맞추고 `hyveo 애드온 센터`로 검색해도 나와요.
 - **zip:** [Releases](../../../../releases)에서 `HyveoCenter-버전.zip`을 받아 `Interface\AddOns\`에 넣어요.
+- **베타 (새 기능 먼저 써 보기):** 새 버전은 베타로 먼저 올라오고, 게임에서 확인이 끝나면 정식으로 바뀌어요. CurseForge 앱에서 이 애드온의 Release Type을 **Beta**로 바꾸거나(내 애드온 목록에서 오른쪽 클릭), CurseForge 페이지의 Files 탭에서 **B** 표시가 붙은 파일을 받으세요.
 
 ## 할 수 있는 것
 

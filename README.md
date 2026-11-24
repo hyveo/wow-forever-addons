@@ -65,6 +65,8 @@ What to include:
 2. Search for `LevelPace`, `CenterBar` or `hyveo`, or open the CurseForge links in the table above.
 3. Click **Install**. The app also tells you about updates.
 
+**Want new features early?** New versions are published as Beta first and move to Release once they have been checked in game. To get them, set the addon's Release Type to **Beta** in the CurseForge app (right-click the addon in your addon list), or download the file marked **B** from the Files tab of the addon's CurseForge page. If a beta misbehaves, please [report it](#reporting-a-bug).
+
 ### Option 2. Download the zip
 
 1. Download the zip of the addon you want from [Releases](../../releases).
@@ -188,6 +190,8 @@ World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니
 1. [CurseForge 앱](https://www.curseforge.com/download/app)에서 World of Warcraft를 고르고, 게임 버전을 **WoW Forever**로 맞춥니다.
 2. `레벨페이스`, `센터바`, `hyveo`로 검색하거나 위 표의 CurseForge 링크를 엽니다.
 3. **Install**을 누릅니다. 업데이트도 앱이 알려 줍니다.
+
+**새 기능을 먼저 써 보려면**: 새 버전은 베타로 먼저 올라오고, 게임에서 확인이 끝나면 정식으로 바뀌어요. 받으려면 CurseForge 앱에서 그 애드온의 Release Type을 **Beta**로 바꾸거나(내 애드온 목록에서 애드온을 오른쪽 클릭), 애드온의 CurseForge 페이지 Files 탭에서 **B** 표시가 붙은 파일을 받으세요. 베타에서 문제가 생기면 [버그 제보](#버그-제보)로 알려 주세요.
 
 ### 방법 2. zip을 받아 직접 넣기
 
