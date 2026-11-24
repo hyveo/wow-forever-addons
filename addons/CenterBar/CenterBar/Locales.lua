@@ -23,7 +23,7 @@ S.enUS = {
 		MM_DRAG     = "Drag: move this button",
 		CANT_PLACE  = "This can't be placed on a button.",
 		RESET       = "CenterBar position and settings reset. (Your spells stay on the buttons)",
-		HELP        = "/cb — options  |  /cb 1 … /cb 5 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset",
+		HELP        = "/cb — options  |  /cb 1 … /cb 5 — switch slot  |  /cb lock — lock/unlock  |  /cb reset — reset  |  /cb errors — error log",
 		HANDLE      = "CenterBar — drag to move",
 	},
 	opt = {
@@ -81,7 +81,7 @@ S.koKR = {
 		MM_DRAG     = "드래그: 버튼 옮기기",
 		CANT_PLACE  = "이건 버튼에 넣을 수 없어요.",
 		RESET       = "센터바 위치와 설정을 처음으로 되돌렸어요. (버튼에 넣은 기술은 그대로예요)",
-		HELP        = "/cb — 설정 창  |  /cb 1 ~ /cb 5 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로",
+		HELP        = "/cb — 설정 창  |  /cb 1 ~ /cb 5 — 슬롯 바꾸기  |  /cb lock — 잠금/해제  |  /cb reset — 처음으로  |  /cb errors — 오류 기록",
 		HANDLE      = "센터바 — 드래그해서 옮기기",
 	},
 	opt = {
@@ -137,7 +137,7 @@ S.deDE = {
 		MM_DRAG     = "Ziehen: diesen Knopf verschieben",
 		CANT_PLACE  = "Das kann nicht auf eine Taste gelegt werden.",
 		RESET       = "Position und Einstellungen von CenterBar zurückgesetzt. (Deine Zauber bleiben auf den Tasten)",
-		HELP        = "/cb — Optionen  |  /cb 1 … /cb 5 — Slot wechseln  |  /cb lock — sperren/entsperren  |  /cb reset — zurücksetzen",
+		HELP        = "/cb — Optionen  |  /cb 1 … /cb 5 — Slot wechseln  |  /cb lock — sperren/entsperren  |  /cb reset — zurücksetzen  |  /cb errors — Fehlerprotokoll",
 		HANDLE      = "CenterBar — zum Verschieben ziehen",
 	},
 	opt = {
@@ -192,7 +192,7 @@ S.frFR = {
 		MM_DRAG     = "Glisser : déplacer ce bouton",
 		CANT_PLACE  = "Ceci ne peut pas être placé sur un bouton.",
 		RESET       = "Position et réglages de CenterBar réinitialisés. (Vos sorts restent sur les boutons)",
-		HELP        = "/cb — options  |  /cb 1 … /cb 5 — changer d'emplacement  |  /cb lock — verrouiller/déverrouiller  |  /cb reset — réinitialiser",
+		HELP        = "/cb — options  |  /cb 1 … /cb 5 — changer d'emplacement  |  /cb lock — verrouiller/déverrouiller  |  /cb reset — réinitialiser  |  /cb errors — journal d'erreurs",
 		HANDLE      = "CenterBar — faire glisser pour déplacer",
 	},
 	opt = {
@@ -247,7 +247,7 @@ S.esES = {
 		MM_DRAG     = "Arrastrar: mover este botón",
 		CANT_PLACE  = "Esto no se puede colocar en un botón.",
 		RESET       = "Posición y ajustes de CenterBar restablecidos. (Tus hechizos siguen en los botones)",
-		HELP        = "/cb — opciones  |  /cb 1 … /cb 5 — cambiar ranura  |  /cb lock — bloquear/desbloquear  |  /cb reset — restablecer",
+		HELP        = "/cb — opciones  |  /cb 1 … /cb 5 — cambiar ranura  |  /cb lock — bloquear/desbloquear  |  /cb reset — restablecer  |  /cb errors — registro de errores",
 		HANDLE      = "CenterBar — arrastra para mover",
 	},
 	opt = {
@@ -302,7 +302,7 @@ S.ptBR = {
 		MM_DRAG     = "Arrastar: mover este botão",
 		CANT_PLACE  = "Isto não pode ser colocado num botão.",
 		RESET       = "Posição e configurações da CenterBar redefinidas. (Seus feitiços continuam nos botões)",
-		HELP        = "/cb — opções  |  /cb 1 … /cb 5 — trocar espaço  |  /cb lock — travar/destravar  |  /cb reset — redefinir",
+		HELP        = "/cb — opções  |  /cb 1 … /cb 5 — trocar espaço  |  /cb lock — travar/destravar  |  /cb reset — redefinir  |  /cb errors — registro de erros",
 		HANDLE      = "CenterBar — arraste para mover",
 	},
 	opt = {
@@ -357,7 +357,7 @@ S.ruRU = {
 		MM_DRAG     = "Перетаскивание: переместить кнопку",
 		CANT_PLACE  = "Это нельзя поместить на кнопку.",
 		RESET       = "Положение и настройки CenterBar сброшены. (Заклинания на кнопках остались)",
-		HELP        = "/cb — настройки  |  /cb 1 … /cb 5 — сменить слот  |  /cb lock — закрепить/открепить  |  /cb reset — сброс",
+		HELP        = "/cb — настройки  |  /cb 1 … /cb 5 — сменить слот  |  /cb lock — закрепить/открепить  |  /cb reset — сброс  |  /cb errors — журнал ошибок",
 		HANDLE      = "CenterBar — перетащите, чтобы переместить",
 	},
 	opt = {
@@ -412,7 +412,7 @@ S.zhCN = {
 		MM_DRAG     = "拖动：移动此按钮",
 		CANT_PLACE  = "这个不能放到按钮上。",
 		RESET       = "CenterBar 的位置和设置已重置。（按钮上的技能保持不变）",
-		HELP        = "/cb — 设置  |  /cb 1 … /cb 5 — 切换槽位  |  /cb lock — 锁定/解锁  |  /cb reset — 重置",
+		HELP        = "/cb — 设置  |  /cb 1 … /cb 5 — 切换槽位  |  /cb lock — 锁定/解锁  |  /cb reset — 重置  |  /cb errors — 错误记录",
 		HANDLE      = "CenterBar — 拖动以移动",
 	},
 	opt = {
@@ -468,7 +468,7 @@ S.zhTW = {
 		MM_DRAG     = "拖曳：移動此按鈕",
 		CANT_PLACE  = "這個不能放到按鈕上。",
 		RESET       = "CenterBar 的位置和設定已重設。（按鈕上的技能維持不變）",
-		HELP        = "/cb — 設定  |  /cb 1 … /cb 5 — 切換欄位  |  /cb lock — 鎖定/解鎖  |  /cb reset — 重設",
+		HELP        = "/cb — 設定  |  /cb 1 … /cb 5 — 切換欄位  |  /cb lock — 鎖定/解鎖  |  /cb reset — 重設  |  /cb errors — 錯誤記錄",
 		HANDLE      = "CenterBar — 拖曳以移動",
 	},
 	opt = {

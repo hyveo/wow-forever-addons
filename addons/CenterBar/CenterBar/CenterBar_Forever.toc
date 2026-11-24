@@ -22,5 +22,6 @@
 ## X-Issues: https://github.com/hyveo/wow-forever-addons/issues
 
 Locales.lua
+ErrorLog.lua
 CenterBar.lua
 CenterBar_Options.lua
