@@ -77,3 +77,9 @@ Spotted an awkward or wrong translation? Please open a [GitHub issue](https://gi
 
 - 애드온 목록에 **미호환**이 뜨면: 게임에서 `/dump select(4, GetBuildInfo())` 결과 번호
 - 오류가 나면: `/console scriptErrors 1` 입력 후 다시 재현한 오류 문구
+
+## 참고 · Credits
+
+버튼 배치와 설정 구성은 Clamp, zico님의 중앙버튼(CentarBar)을 참고했어요. 센터바는 와우 포에버용으로 처음부터 새로 만든 별개의 애드온이에요. 좋은 애드온을 만들어 주신 두 분께 감사드려요.
+
+Button layouts and option design are inspired by 중앙버튼 (CentarBar) by Clamp and zico. CenterBar is a separate addon written from scratch for WoW Forever. Thank you both for the original.
