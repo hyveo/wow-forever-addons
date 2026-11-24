@@ -178,5 +178,13 @@ C_MountJournal.SummonByID=function(id) summonedMount=id mounted=true end C_Mount
 local function click(b) for _,h in ipairs(b.hooked.OnClick) do h(b,"LeftButton",true) h(b,"LeftButton",false) end end
 click(CenterBarButton12) print("click 1 summon:", tostring(summonedMount), "mounted", tostring(mounted))
 click(CenterBarButton12) print("click 2 dismiss:", tostring(dismissed), "mounted", tostring(mounted))
+
+-- 마우스 클릭은 뗄 때 동작 (useOnKeyDown=false 가 정해져 있으면 그걸 따름)
+local wrapped={} for _,w in ipairs(wraps) do wrapped[w]=(wrapped[w] or 0)+1 end
+print("wrapped scripts:", "OnDragStart", tostring(wrapped.OnDragStart), "OnClick", tostring(wrapped.OnClick))
+mounted=false summonedMount=nil
+CenterBarButton12.attrs.useOnKeyDown=false
+for _,h in ipairs(CenterBarButton12.hooked.OnClick) do h(CenterBarButton12,"LeftButton",true) end print("mouse down:", tostring(summonedMount))
+for _,h in ipairs(CenterBarButton12.hooked.OnClick) do h(CenterBarButton12,"LeftButton",false) end print("mouse up:", tostring(summonedMount))
 """)
 for p in L.globals().printed.values(): print(p)

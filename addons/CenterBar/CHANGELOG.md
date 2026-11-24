@@ -2,6 +2,16 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## 1.7.2 — 2026-11-25
+
+**English**
+
+- Dragging a button's contents off no longer uses the item or spell. Mouse clicks now act when you release the button, the same as the game's own action bars. Keybinds still follow your "cast on key down" setting
+
+**한국어**
+
+- 버튼에서 끌어 뺄 때 그 아이템이나 기술이 써져 버리던 문제 수정. 마우스 클릭은 게임 기본 단축바처럼 버튼을 뗄 때 동작해요. 단축키는 "누를 때 시전" 설정을 그대로 따라요
+
 ## 1.7.1 — 2026-11-25
 
 **English**

@@ -244,6 +244,17 @@ local DRAG_START = [[
 ]]
 local function NoOp() end
 
+-- 마우스로 누를 때는 "뗄 때" 동작하게 한다 (게임 기본 단축바와 같음).
+-- 게임 설정이 "누를 때 시전"이면 마우스를 누르는 순간 기술이 써져서, 버튼을 끌어 빼려고만 해도 써져 버린다.
+-- 마우스가 버튼 위에 있으면 마우스 클릭으로 보고 뗄 때 동작, 아니면(단축키) 게임 설정대로 둔다.
+local CLICK_PRE = [[
+	if self:IsUnderMouse() then
+		self:SetAttribute("useOnKeyDown", false)
+	else
+		self:SetAttribute("useOnKeyDown", nil)
+	end
+]]
+
 local ShowSpellTooltip
 
 local function ShortKey(key)
@@ -630,6 +641,7 @@ for i = 1, NUM_BUTTONS do
 	b:RegisterForDrag("LeftButton")
 	b:SetScript("OnDragStart", NoOp)
 	SecureHandlerWrapScript(b, "OnDragStart", bar, DRAG_START)
+	SecureHandlerWrapScript(b, "OnClick", bar, CLICK_PRE)
 	-- 끌어 빼면(커서에 들리면) 버튼을 비운다
 	-- 게임이 집어 주지 않는 것(아직 안 써 본 아이템, 탈것 등)도 있어서, 커서에 들렸는지와 상관없이 비운다.
 	b:HookScript("OnDragStart", function(self)
@@ -698,7 +710,10 @@ for i = 1, NUM_BUTTONS do
 			return
 		end
 		if not c or not (c.t == "pet" or c.mount) then return end
-		local useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown") and true or false
+		-- 보안 버튼과 같은 시점에 동작: 위 CLICK_PRE가 정해 둔 값(마우스면 뗄 때)이 있으면 그걸 따른다
+		local useDown = self:GetAttribute("useOnKeyDown")
+		if useDown == nil then useDown = GetCVarBool and GetCVarBool("ActionButtonUseKeyDown") end
+		useDown = useDown and true or false
 		if (down and true or false) ~= useDown then return end
 		if c.mount then
 			-- 탈것 창의 "탈것 타기" 버튼과 같은 동작: 타고 있으면 내리고, 아니면 부른다
