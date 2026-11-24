@@ -2,6 +2,20 @@
 
 Each version lists English first, then Korean. 버전마다 영어를 먼저, 한국어를 그다음에 적습니다.
 
+## 1.1.0 — 2026-11-25
+
+**English**
+
+- Error log: if one of hyveo's addons hits an error, it is quietly written down instead of being lost. Open it with `/hv errors`, copy it, and post it in a GitHub issue or a CurseForge comment. It holds no character, realm or account names
+- The addon center window has an "Error log" button
+- The log covers CenterBar, LevelPace and hyveo Addon Center together, whichever of them you open it from
+
+**한국어**
+
+- 오류 기록: hyveo 애드온에서 오류가 나면 사라지지 않고 조용히 적어 둬요. `/hv 오류`(또는 `/hv errors`)로 열어서 복사한 뒤 GitHub 이슈나 CurseForge 댓글에 올려 주세요. 캐릭터·서버·계정 이름은 들어가지 않아요
+- 애드온 센터 창에 "오류 기록" 버튼이 생겼어요
+- 센터바, 레벨페이스, hyveo 애드온 센터의 오류를 한곳에 모아 보여 줘요. 어느 애드온에서 열어도 같은 기록이에요
+
 ## 1.0.0 — 2026-11-21
 
 **English**

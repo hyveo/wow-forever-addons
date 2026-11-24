@@ -1161,6 +1161,8 @@ SlashCmdList.CENTERBAR = function(msg)
 		CenterBar.SetLocked(not db.locked)
 	elseif msg == "reset" or msg == "초기화" then
 		CenterBar.Reset()
+	elseif msg == "errors" or msg == "error" or msg == "오류" then
+		ns.ShowErrorLog()
 	else
 		Print(L.HELP, true)
 	end

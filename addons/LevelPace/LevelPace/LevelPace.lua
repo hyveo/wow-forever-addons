@@ -609,6 +609,8 @@ SlashCmdList.LEVELPACE = function(msg)
 		SetBarLocked(not db.bar.locked)
 	elseif msg == "reset" or msg == "초기화" then
 		ResetSession()
+	elseif msg == "errors" or msg == "error" or msg == "오류" then
+		ns.ShowErrorLog()
 	elseif msg == "minimap" or msg == "미니맵" then
 		db.minimapHide = not db.minimapHide
 		UpdateMinimapButton()

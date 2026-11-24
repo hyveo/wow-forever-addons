@@ -408,6 +408,13 @@ d.bugBtn:SetPoint("BOTTOMRIGHT", -12, 10)
 d.bugBtn:SetText(L.BTN_BUG)
 d.bugBtn:SetScript("OnClick", function() ShowCopy(ISSUE_URL) end)
 
+-- 오류 기록 창 (세 애드온의 오류를 한곳에서 보고 복사)
+d.errBtn = CreateFrame("Button", nil, d, "UIPanelButtonTemplate")
+d.errBtn:SetSize(110, 22)
+d.errBtn:SetPoint("RIGHT", d.bugBtn, "LEFT", -6, 0)
+d.errBtn:SetText(ns.ErrorText("BUTTON"))
+d.errBtn:SetScript("OnClick", function() ns.ShowErrorLog() end)
+
 -- 언어를 바꾼 뒤(접속 시 저장된 언어 적용) 미리 만들어 둔 글자를 다시 쓴다
 local function ApplyTexts()
 	local texts = {
@@ -431,6 +438,7 @@ local function ApplyTexts()
 	d.quickNone:SetText(L.QUICK_NONE)
 	d.footer:SetText(L.FOOTER)
 	d.bugBtn:SetText(L.BTN_BUG)
+	d.errBtn:SetText(ns.ErrorText("BUTTON"))
 	StaticPopupDialogs["HYVEOCENTER_LANGUAGE"].button1 = L.RELOAD_NOW
 	StaticPopupDialogs["HYVEOCENTER_LANGUAGE"].button2 = L.LATER
 	RefreshLang()
@@ -511,6 +519,7 @@ local function PrintHelp()
 	for _, a in ipairs(ADDONS) do
 		print("  " .. L.HELP_LINE:format(a.keys[1], a.name, a.cmd))
 	end
+	print("  /hv errors — " .. ns.ErrorText("HELP"))
 	print("  " .. L.HELP_HELP)
 end
 
@@ -530,6 +539,8 @@ SlashCmdList.HYVEOCENTER = function(msg)
 		PrintHelp()
 	elseif msg == "minimap" or msg == "미니맵" then
 		HyveoCenter_ToggleMinimapButton()
+	elseif msg == "errors" or msg == "error" or msg == "오류" then
+		ns.ShowErrorLog()
 	else
 		local a, i = FindAddon(msg)
 		if not a then
