@@ -9,11 +9,13 @@ on:
     paths:
       - "addons/**"
       - "scripts/**"
+      - "tests/**"
       - ".github/workflows/build.yml"
   pull_request:
     paths:
       - "addons/**"
       - "scripts/**"
+      - "tests/**"
       - ".github/workflows/build.yml"
   workflow_dispatch:
 
@@ -21,6 +23,19 @@ permissions:
   contents: read
 
 jobs:
+  # 자동 검사: 문법(Lua 5.1), 공용 파일 일치, 가짜 게임 환경 시나리오. 실패하면 테스트 zip도 만들지 않는다.
+  checks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 자동 검사
+        run: |
+          pip install --quiet lupa
+          python3 tests/run_tests.py
+
   # 이번 PR이나 병합에서 실제로 바뀐 애드온만 고른다.
   # 묶는 스크립트나 이 워크플로가 바뀌었거나, 직접 실행한 경우에는 전부 만든다.
   changes:
@@ -60,7 +75,7 @@ jobs:
           echo "addons=$LIST" >> "$GITHUB_OUTPUT"
 
   build:
-    needs: changes
+    needs: [changes, checks]
     if: ${{ needs.changes.outputs.addons != '[]' && needs.changes.outputs.addons != '' }}
     runs-on: ubuntu-latest
     strategy:

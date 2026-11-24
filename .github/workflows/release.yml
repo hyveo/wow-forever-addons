@@ -16,6 +16,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # 자동 검사(문법, 가짜 게임 환경 시나리오)를 통과하지 못하면 배포하지 않는다
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: 자동 검사
+        run: |
+          pip install --quiet lupa
+          python3 tests/run_tests.py
+
       - name: 태그에서 애드온 이름과 버전 추출
         id: meta
         run: |
@@ -44,6 +53,17 @@ jobs:
           grep -q '^\*\*English\*\*' notes.md || echo "::warning::CHANGELOG $A $V 항목에 **English** 부분이 없습니다."
           grep -q '^\*\*한국어\*\*' notes.md || echo "::warning::CHANGELOG $A $V 항목에 **한국어** 부분이 없습니다."
           cat notes.md
+
+      # GitHub에서 릴리즈를 만들 때 "Set as a pre-release"를 체크했으면 베타로 올린다.
+      # 베타는 CurseForge 앱에서 "베타 받기"를 켠 사람에게만 보인다.
+      - name: 베타인지 확인
+        id: kind
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          PRE=$(gh release view "${GITHUB_REF_NAME}" --json isPrerelease -q .isPrerelease 2>/dev/null || echo false)
+          if [ "$PRE" = "true" ]; then echo "type=beta" >> "$GITHUB_OUTPUT"; else echo "type=release" >> "$GITHUB_OUTPUT"; fi
+          echo "배포 종류: $PRE (true=베타)"
 
       - name: Release 생성 또는 파일 갱신
         env:
@@ -86,8 +106,8 @@ jobs:
             exit 1
           fi
           echo "게임 버전 ID: $GV"
-          jq -n --rawfile cl notes.md --arg name "$A $V" --argjson gv "$GV" \
-            '{changelog:$cl, changelogType:"markdown", displayName:$name, gameVersions:$gv, releaseType:"release"}' > meta.json
+          jq -n --rawfile cl notes.md --arg name "$A $V" --arg rt "${{ steps.kind.outputs.type }}" --argjson gv "$GV" \
+            '{changelog:$cl, changelogType:"markdown", displayName:$name, gameVersions:$gv, releaseType:$rt}' > meta.json
           CODE=$(curl -sS -o cf.out -w '%{http_code}' -H "X-Api-Token: $CF_API_KEY" \
             -F "metadata=<meta.json" -F "file=@$ZIP" \
             "https://wow.curseforge.com/api/projects/$PID/upload-file")

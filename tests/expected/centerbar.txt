@@ -1,0 +1,25 @@
+b1 -140 -50 b4 -190 -70 preset 1
+import: b1 type=spell spell=100 item=nil macro=nil b2 type=item spell=nil item=item:200 macro=nil b13 type=macro spell=nil item=nil macro=4 b3 type=nil spell=nil item=nil macro=nil
+|cffffd100센터바|r: 슬롯 2번으로 바꿨어요.
+slot2: b1 type=spell spell=300 item=nil macro=nil b2 type=nil spell=nil item=nil macro=nil
+placed: b2 type=spell spell=778 item=nil macro=nil cursor cleared: true
+hooked: in-bar glow false override glow false not-in-bar glow true pre(unhooked) glow true
+after show: pre glow false
+after swap: 777 glow true 999 glow false cursor
+mount placed: b3 type=spell spell=9001 item=nil macro=nil cursor nil
+pet placed: pet 고양이 b5 type=nil spell=nil item=nil macro=nil
+pet summons per click: 1
+pet removed: nil pet
+other refused: pet removed: nil pet
+item placed: b4 type=item spell=nil item=item:4242 macro=nil
+locked, no shift: b4 type=item spell=nil item=item:4242 macro=nil
+locked + shift: b4 type=nil spell=nil item=nil macro=nil picked bag1/3
+mount removed: b3 type=nil spell=nil item=nil macro=nil picked mount2
+b6 t=toy type=toy spell=nil toy=8080 set=nil action=nil
+b7 t=equipset type=equipmentset spell=nil toy=nil set=탱킹 action=nil
+b8 t=spell type=spell spell=3110 toy=nil set=nil action=nil
+b9 t=petaction type=pet spell=nil toy=nil set=nil action=1
+b10 t=flyout type=flyout spell=12 toy=nil set=nil action=nil
+|cffffd100센터바|r: 이건 버튼에 넣을 수 없어요.
+b11 t=nil type=nil spell=nil toy=nil set=nil action=nil |cffffd100센터바|r: 이건 버튼에 넣을 수 없어요.
+b11 t=item type=item spell=nil toy=nil set=nil action=nil
