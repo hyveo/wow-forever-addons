@@ -59,22 +59,24 @@ done
 
 case "$KIND" in
   beta)
-    TITLE="$NAME $V 베타 배포"; COLOR=10181046
+    TITLE="$NAME $V 배포"; BADGE="Beta"; COLOR=10181046
     LEAD="**$V** 버전을 베타로 배포했어요. 게임에서 확인이 끝나면 정식으로 바꿔요."
     KINDTEXT="베타 · CurseForge 앱에서 Release Type을 Beta로 바꾼 사람만 받아요" ;;
   release)
-    TITLE="$NAME $V 정식 배포"; COLOR=3066993
+    TITLE="$NAME $V 배포"; BADGE="Release"; COLOR=3066993
     LEAD="**$V** 버전을 정식으로 배포했어요. CurseForge 앱에서 업데이트로 받을 수 있어요."
     KINDTEXT="정식 (Release) · 모든 사용자가 받아요" ;;
   promoted)
-    TITLE="$NAME $V 정식 릴리즈 (베타 → 정식)"; COLOR=3066993
+    TITLE="$NAME $V 정식 릴리즈"; BADGE="Beta → Release"; COLOR=3066993
     LEAD="베타였던 **$V** 버전이 CurseForge에 정식(Release)으로 릴리즈됐어요. 이제 모든 사용자가 업데이트로 받아요."
     KINDTEXT="정식 (Release) · 베타에서 전환" ;;
   *) echo "알 수 없는 종류: $KIND"; exit 1 ;;
 esac
 
 # 디스코드 글자 수 제한에 맞춘다 (설명 4096자, 칸 1024자, 알림 하나 전체 6000자)
-DESC=$(printf '%s\n\n%s' "$LEAD" "$NOTES" | cut -c1-1800)
+# 제목: 이름과 버전에 릴리즈 링크를 걸고, 뒤에 (Beta) / (Release)를 붙인다
+HEAD="## [$TITLE]($GH_URL) ($BADGE)"
+DESC=$(printf '%s\n%s\n\n%s' "$HEAD" "$LEAD" "$NOTES" | cut -c1-2000)
 DETAIL=$(printf '%s' "$DETAIL" | cut -c1-2400)
 CHECKS=$(printf '%s' "$CHECKS" | cut -c1-1200)
 ISSUES=$(printf '%s' "$ISSUES" | cut -c1-600)
@@ -83,7 +85,7 @@ PAYLOAD=$(jq -n --arg title "$TITLE" --arg desc "$DESC" --arg kind "$KINDTEXT" -
   --arg links "[CurseForge]($CF_URL) · [GitHub 릴리즈]($GH_URL)" --arg url "$GH_URL" --argjson color "$COLOR" \
   '{username:"hyveo addons", allowed_mentions:{parse:[]},
     embeds:(
-      [{title:$title, url:$url, description:$desc, color:$color,
+      [{description:$desc, color:$color,
         fields:[{name:"배포 종류", value:$kind}, {name:"반영된 이슈·요청", value:$issues}]}]
       + (if $detail != "" then [{title:"자세한 수정 내용", description:$detail, color:$color}] else [] end)
       + (if $checks != "" then [{title:"확인해 볼 것", description:$checks, color:$color}] else [] end)
