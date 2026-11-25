@@ -1,0 +1,62 @@
+# 베타였던 릴리즈를 정식으로 바꾸면(GitHub 릴리즈 편집에서 "Set as a pre-release" 체크 해제)
+# 디스코드에 "정식으로 릴리즈됐다"는 알림을 보낸다.
+# 새로 만든 릴리즈의 알림은 release.yml이 보내므로 여기서는 건너뛴다.
+# Actions 화면의 "Run workflow"로 알림을 직접 다시 보낼 수도 있다.
+name: Notify Discord
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "태그 (예: CenterBar-v1.7.2)"
+        required: true
+      kind:
+        description: "알림 종류"
+        type: choice
+        options: [beta, release, promoted]
+        default: beta
+
+permissions:
+  contents: read
+  issues: read
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 무엇을 알릴지 정하기
+        id: what
+        env:
+          EVENT: ${{ github.event_name }}
+          IN_TAG: ${{ inputs.tag }}
+          IN_KIND: ${{ inputs.kind }}
+          REL_TAG: ${{ github.event.release.tag_name }}
+          REL_PUBLISHED: ${{ github.event.release.published_at }}
+        run: |
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            TAG="$IN_TAG"; KIND="$IN_KIND"
+          else
+            TAG="$REL_TAG"; KIND="promoted"
+            # 방금 만든 릴리즈면(게시된 지 10분 안) release.yml이 이미 알렸으므로 건너뛴다
+            AGE=$(( $(date +%s) - $(date -d "$REL_PUBLISHED" +%s) ))
+            if [ "$AGE" -lt 600 ]; then echo "새 릴리즈(게시 후 ${AGE}초)라 건너뜀"; KIND=""; fi
+          fi
+          case "$TAG" in *-v*) ;; *) echo "태그 형식이 아님: $TAG"; KIND="" ;; esac
+          echo "addon=${TAG%-v*}" >> "$GITHUB_OUTPUT"
+          echo "version=${TAG##*-v}" >> "$GITHUB_OUTPUT"
+          echo "kind=$KIND" >> "$GITHUB_OUTPUT"
+
+      - name: 디스코드 알림
+        if: ${{ steps.what.outputs.kind != '' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISCORD_WEBHOOK_CENTERBAR: ${{ secrets.DISCORD_WEBHOOK_CENTERBAR }}
+          DISCORD_WEBHOOK_LEVELPACE: ${{ secrets.DISCORD_WEBHOOK_LEVELPACE }}
+          DISCORD_WEBHOOK_HYVEOCENTER: ${{ secrets.DISCORD_WEBHOOK_HYVEOCENTER }}
+        run: scripts/discord-notify.sh '${{ steps.what.outputs.addon }}' '${{ steps.what.outputs.version }}' '${{ steps.what.outputs.kind }}'
