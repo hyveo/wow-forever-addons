@@ -164,7 +164,7 @@ CurseForge에는 따로 올리지 않아도 됩니다.
 
   이 파일은 디스코드 알림에만 쓰여요. CurseForge와 GitHub 릴리즈 설명에는 `CHANGELOG.md`의 짧은 변경 내역이 들어가요. zip에도 들어가지 않아요.
 - **반영된 이슈**는 앞 버전 이후 그 애드온을 고친 커밋 메시지의 `Refs #번호`, `Fixes #번호`에서 찾아요. 그래서 커밋이나 PR 설명에 이슈 번호를 꼭 적어요.
-- **정식 전환 알림**은 GitHub 릴리즈 편집에서 **Set as a pre-release** 체크를 풀 때 나가요. CurseForge에서 Release Type을 먼저 `Release`로 바꾼 다음에 체크를 풀어요.
+- **정식 전환 알림**은 직접 보내요. CurseForge에서 Release Type을 `Release`로 바꾸고 GitHub 릴리즈의 **Set as a pre-release** 체크를 푼 다음, [Actions](https://github.com/hyveo/wow-forever-addons/actions) → `Notify Discord` → **Run workflow**에서 태그를 적고 종류를 `promoted`로 골라요. (체크를 풀 때 자동으로 나가게 해 뒀지만, 2026-11-25에 해 보니 GitHub가 신호를 보내지 않았어요.)
 - 웹훅 주소는 저장소 Secrets에 넣어요: `DISCORD_WEBHOOK_CENTERBAR`, `DISCORD_WEBHOOK_LEVELPACE`, `DISCORD_WEBHOOK_HYVEOCENTER`. 웹훅 주소는 아는 사람 누구나 그 채널에 글을 쓸 수 있는 열쇠라서, 코드나 문서에 적지 않아요.
 - Secret이 없으면 알림만 건너뛰고 배포는 그대로 돼요.
 - 알림을 다시 보내려면 [Actions](https://github.com/hyveo/wow-forever-addons/actions) → `Notify Discord` → **Run workflow**에서 태그와 종류를 골라요.
