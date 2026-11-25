@@ -136,6 +136,23 @@ CurseForge에는 따로 올리지 않아도 됩니다.
 3. `CHANGELOG.md`에서 해당 버전 항목을 뽑아 릴리즈 설명으로 넣어요.
 4. zip을 GitHub 릴리즈에 붙여요.
 5. 같은 zip을 CurseForge 프로젝트에 올려요. 게임 버전은 1.60.1(WoW Forever)이에요. pre-release로 만든 릴리즈는 베타로, 아니면 정식으로 올라가요.
+6. 디스코드 채널에 배포 알림을 보내요.
+
+## 디스코드 알림
+
+배포하면 애드온별 디스코드 채널에 알림이 자동으로 가요.
+
+| 언제 | 알림 내용 |
+|---|---|
+| 베타로 배포 | 버전, "베타", 변경 내역, 반영된 이슈·요청(번호와 제목), 받는 곳 |
+| 정식으로 배포 | 버전, "정식", 변경 내역, 반영된 이슈·요청, 받는 곳 |
+| 베타를 정식으로 전환 | "베타였던 버전이 CurseForge에 정식으로 릴리즈됐다"는 알림 |
+
+- **반영된 이슈**는 앞 버전 이후 그 애드온을 고친 커밋 메시지의 `Refs #번호`, `Fixes #번호`에서 찾아요. 그래서 커밋이나 PR 설명에 이슈 번호를 꼭 적어요.
+- **정식 전환 알림**은 GitHub 릴리즈 편집에서 **Set as a pre-release** 체크를 풀 때 나가요. CurseForge에서 Release Type을 먼저 `Release`로 바꾼 다음에 체크를 풀어요.
+- 웹훅 주소는 저장소 Secrets에 넣어요: `DISCORD_WEBHOOK_CENTERBAR`, `DISCORD_WEBHOOK_LEVELPACE`, `DISCORD_WEBHOOK_HYVEOCENTER`. 웹훅 주소는 아는 사람 누구나 그 채널에 글을 쓸 수 있는 열쇠라서, 코드나 문서에 적지 않아요.
+- Secret이 없으면 알림만 건너뛰고 배포는 그대로 돼요.
+- 알림을 다시 보내려면 [Actions](https://github.com/hyveo/wow-forever-addons/actions) → `Notify Discord` → **Run workflow**에서 태그와 종류를 골라요.
 
 ## 5. 올라갔는지 확인하기
 

@@ -9,12 +9,15 @@ on:
 
 permissions:
   contents: write
+  issues: read
 
 jobs:
   release:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # 디스코드 알림에서 앞 버전 이후의 이슈 번호를 찾으려면 전체 기록과 태그가 필요
 
       # 자동 검사(문법, 가짜 게임 환경 시나리오)를 통과하지 못하면 배포하지 않는다
       - uses: actions/setup-python@v5
@@ -113,3 +116,13 @@ jobs:
             "https://wow.curseforge.com/api/projects/$PID/upload-file")
           echo "HTTP $CODE"; cat cf.out; echo
           [ "$CODE" = "200" ]
+
+      # 디스코드 채널에 배포 알림 (버전, 베타/정식, 변경 내역, 반영된 이슈). 실패해도 배포는 그대로 둔다.
+      - name: 디스코드 알림
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DISCORD_WEBHOOK_CENTERBAR: ${{ secrets.DISCORD_WEBHOOK_CENTERBAR }}
+          DISCORD_WEBHOOK_LEVELPACE: ${{ secrets.DISCORD_WEBHOOK_LEVELPACE }}
+          DISCORD_WEBHOOK_HYVEOCENTER: ${{ secrets.DISCORD_WEBHOOK_HYVEOCENTER }}
+        run: scripts/discord-notify.sh '${{ steps.meta.outputs.addon }}' '${{ steps.meta.outputs.version }}' '${{ steps.kind.outputs.type }}'
