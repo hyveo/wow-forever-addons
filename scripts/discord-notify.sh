@@ -76,7 +76,7 @@ esac
 # 디스코드 글자 수 제한에 맞춘다 (설명 4096자, 칸 1024자, 알림 하나 전체 6000자)
 DESC=$(printf '%s\n\n%s' "$LEAD" "$NOTES" | cut -c1-1800)
 DETAIL=$(printf '%s' "$DETAIL" | cut -c1-2400)
-CHECKS=$(printf '%s' "$CHECKS" | cut -c1-1000)
+CHECKS=$(printf '%s' "$CHECKS" | cut -c1-1200)
 ISSUES=$(printf '%s' "$ISSUES" | cut -c1-600)
 PAYLOAD=$(jq -n --arg title "$TITLE" --arg desc "$DESC" --arg kind "$KINDTEXT" --arg issues "$ISSUES" \
   --arg detail "$DETAIL" --arg checks "$CHECKS" \
@@ -86,9 +86,8 @@ PAYLOAD=$(jq -n --arg title "$TITLE" --arg desc "$DESC" --arg kind "$KINDTEXT" -
       [{title:$title, url:$url, description:$desc, color:$color,
         fields:[{name:"배포 종류", value:$kind}, {name:"반영된 이슈·요청", value:$issues}]}]
       + (if $detail != "" then [{title:"자세한 수정 내용", description:$detail, color:$color}] else [] end)
-      + [{color:$color, fields:(
-          (if $checks != "" then [{name:"확인해 볼 것", value:$checks}] else [] end)
-          + [{name:"받는 곳", value:$links}])}]
+      + (if $checks != "" then [{title:"확인해 볼 것", description:$checks, color:$color}] else [] end)
+      + [{color:$color, fields:[{name:"받는 곳", value:$links}]}]
     )}')
 
 if [ "${DRY_RUN:-}" = "1" ]; then echo "$PAYLOAD"; exit 0; fi
