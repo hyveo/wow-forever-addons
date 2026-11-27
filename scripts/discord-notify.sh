@@ -4,6 +4,7 @@
 #   beta      베타로 배포됨
 #   release   정식으로 배포됨
 #   promoted  베타였던 버전이 정식으로 바뀜
+# 정식(release, promoted)이면 그 버전에 연결된 열린 이슈를 댓글을 남기고 닫는다.
 # 웹훅 주소는 저장소 Secrets에서 환경 변수로 받는다 (코드에 적지 않는다):
 #   DISCORD_WEBHOOK_CENTERBAR, DISCORD_WEBHOOK_LEVELPACE, DISCORD_WEBHOOK_HYVEOCENTER
 # DRY_RUN=1 이면 보내지 않고 보낼 내용만 출력한다.
@@ -40,12 +41,21 @@ CHECKS=$(section "확인" | sed -E 's/^- (\[ \] )?/☐ /')
 
 # 이 버전에 반영된 이슈: 바로 앞 버전 태그 이후 커밋 메시지의 "Refs/Fixes/Closes #번호"
 PREV=$(git tag --list "$A-v*" | sort -V | awk -v t="$TAG" '$0==t {print p; exit} {p=$0}')
+# 정식 배포면 "바로 앞 정식 버전" 이후를 본다. 그 사이 베타들에서 고친 이슈까지 함께 잡기 위해서다.
+if [ "$KIND" != "beta" ]; then
+  OFFICIAL=""
+  for t in $(git tag --list "$A-v*" | sort -V | awk -v t="$TAG" '$0==t {exit} {print}' | tac); do
+    P=$(gh api "repos/$REPO/releases/tags/$t" --jq .prerelease 2>/dev/null || echo "")
+    if [ "$P" = "false" ]; then OFFICIAL="$t"; break; fi
+  done
+  [ -n "$OFFICIAL" ] && PREV="$OFFICIAL"
+fi
 END_REF="$TAG"; git rev-parse -q --verify "refs/tags/$TAG" >/dev/null || END_REF="HEAD"
 RANGE="$END_REF"; [ -n "$PREV" ] && RANGE="$PREV..$END_REF"
 NUMS=$(git log --format=%B "$RANGE" -- "addons/$A" 2>/dev/null \
   | grep -iE '(refs|fix(es|ed)?|close[sd]?|resolve[sd]?)[: ]+#[0-9]' \
   | sed -E 's/\(#[0-9]+\)//g' | grep -oE '#[0-9]+' | tr -d '#' | sort -un || true)
-ISSUES=""
+ISSUES=""; TO_CLOSE=""
 for n in $NUMS; do
   J=$(gh api "repos/$REPO/issues/$n" 2>/dev/null || true)
   [ -n "$J" ] || continue
@@ -53,6 +63,8 @@ for n in $NUMS; do
   T=$(echo "$J" | jq -r '.title')
   K=$(echo "$J" | jq -r '[.labels[].name] | if index("bug") then "버그" elif index("enhancement") then "요청" else "기타" end')
   S=$(echo "$J" | jq -r 'if .state=="closed" then "닫힘" else "확인 중" end')
+  # 정식 배포에 들어간 이슈는 닫는다 (아래에서 실제로 닫음)
+  if [ "$KIND" != "beta" ] && [ "$S" = "확인 중" ]; then TO_CLOSE="$TO_CLOSE $n"; S="이번 배포로 닫음"; fi
   ISSUES="${ISSUES}• [#$n](https://github.com/$REPO/issues/$n) $T · $K · $S"$'\n'
 done
 [ -n "$ISSUES" ] || ISSUES="연결된 이슈 없음"
@@ -92,7 +104,15 @@ PAYLOAD=$(jq -n --arg title "$TITLE" --arg desc "$DESC" --arg kind "$KINDTEXT" -
       + [{color:$color, fields:[{name:"받는 곳", value:$links}]}]
     )}')
 
-if [ "${DRY_RUN:-}" = "1" ]; then echo "$PAYLOAD"; exit 0; fi
+if [ "${DRY_RUN:-}" = "1" ]; then echo "$PAYLOAD"; [ -z "$TO_CLOSE" ] || echo "닫을 이슈:$TO_CLOSE" >&2; exit 0; fi
+
+# 정식 배포에 들어간 이슈 닫기 (디스코드 알림이 실패해도 닫히도록 알림보다 먼저 한다)
+for n in $TO_CLOSE; do
+  printf '%s %s 정식 배포에 포함되어 닫습니다: %s\n\n배포 후에도 같은 문제가 보이면 다시 열어 주세요.\n' "$NAME" "$V" "$GH_URL" > /tmp/close.md
+  gh api "repos/$REPO/issues/$n/comments" -F body=@/tmp/close.md --jq .id >/dev/null \
+    && gh api -X PATCH "repos/$REPO/issues/$n" -f state=closed -f state_reason=completed --jq '"이슈 #\(.number) 닫음"' \
+    || echo "::warning::이슈 #$n 을 닫지 못했습니다."
+done
 if [ -z "$HOOK" ]; then echo "::warning::$A 디스코드 웹훅 Secret이 없어 알림을 건너뜀"; exit 0; fi
 CODE=$(curl -sS -o /tmp/discord.out -w '%{http_code}' -H 'Content-Type: application/json' --data "$PAYLOAD" "$HOOK")
 echo "디스코드 응답: HTTP $CODE"
