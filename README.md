@@ -2,7 +2,7 @@
 
 **English** | [한국어](#wow-forever-애드온-모음-한국어)
 
-[![GitHub stars](https://img.shields.io/github/stars/hyveo/wow-forever-addons?style=social)](https://github.com/hyveo/wow-forever-addons/stargazers) [![Sponsor](https://img.shields.io/badge/Sponsor-hyveo-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hyveo)
+[![GitHub stars](https://img.shields.io/github/stars/hyveo/wow-forever-addons?style=social)](https://github.com/hyveo/wow-forever-addons/stargazers) [![Sponsor hyveo](docs/img/sponsor.svg)](https://github.com/sponsors/hyveo)
 
 A collection of addons for World of Warcraft: Forever.
 Each addon is one folder under `addons/`, and each one is versioned and released separately.
@@ -116,7 +116,7 @@ To build only the zip locally, run `scripts/package.sh LevelPace 1.0.1` (output:
 If an addon helped you, please sponsor via [GitHub Sponsors](https://github.com/sponsors/hyveo).
 Sponsorship goes toward making new addons and keeping up with Forever patches.
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-hyveo-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hyveo)
+[![Sponsor hyveo](docs/img/sponsor.svg)](https://github.com/sponsors/hyveo)
 
 ## License
 
@@ -128,7 +128,7 @@ All Rights Reserved. Using the addons and sending bug reports or pull requests i
 
 [English](#wow-forever-addons) | **한국어**
 
-[![GitHub stars](https://img.shields.io/github/stars/hyveo/wow-forever-addons?style=social)](https://github.com/hyveo/wow-forever-addons/stargazers) [![Sponsor](https://img.shields.io/badge/Sponsor-hyveo-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hyveo)
+[![GitHub stars](https://img.shields.io/github/stars/hyveo/wow-forever-addons?style=social)](https://github.com/hyveo/wow-forever-addons/stargazers) [![Sponsor hyveo](docs/img/sponsor.svg)](https://github.com/sponsors/hyveo)
 
 World of Warcraft: Forever(와우 포에버)에서 쓰는 애드온 모음입니다.
 애드온 하나가 `addons/` 아래 폴더 하나이고, 버전과 배포는 애드온별로 따로 관리합니다.
@@ -242,7 +242,7 @@ GitHub Actions가 해당 애드온만 zip으로 묶고, TOC의 `@project-version
 애드온이 도움이 됐다면 [GitHub Sponsors](https://github.com/sponsors/hyveo)로 후원해 주세요.
 후원은 새 애드온 제작과 포에버 패치 대응에 쓰입니다.
 
-[![Sponsor](https://img.shields.io/badge/Sponsor-hyveo-ea4aaa?logo=githubsponsors&logoColor=white)](https://github.com/sponsors/hyveo)
+[![Sponsor hyveo](docs/img/sponsor.svg)](https://github.com/sponsors/hyveo)
 
 ## 라이선스
 
