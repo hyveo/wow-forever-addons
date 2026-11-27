@@ -9,7 +9,7 @@ on:
 
 permissions:
   contents: write
-  issues: read
+  issues: write # 정식 배포에 들어간 이슈를 닫는다
 
 jobs:
   release:
